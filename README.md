@@ -15,8 +15,8 @@ A Ruby Gem that facilitates the use of Sony Remote Camera API.
 ## Backgrounds
 
 [Sony Camera Remote API](https://developer.sony.com/develop/cameras/) allows us to control a number of Sony cameras, including Sony Action cams, Sony Alpha cameras and Lens Style cameras, wirelessly from another device.
-These APIs are quite low-level, so that we have to implement a lot of sequences while considering many pitfalls, which are less documented in their API reference.
-The aim of this gem is providing wrapper methods that make it easy to use Sony camera functions for higher-level applications.
+But these APIs are quite low-level, so that we have to implement a lot of sequences while considering many pitfalls, which are less documented in their API reference.
+This gem is a wrapper library that make it easy to use Sony camera functions for high-level applications.
 
 
 ## Features
@@ -52,12 +52,11 @@ Or install it yourself as:
 
 ## Usage
 
-1. Connect to the camera by Direct Wi-Fi
+1. Connect your PC to the camera by Direct Wi-Fi. If you are using Linux, bundled scripts and its interface method are available.
 2. Create SonyCameraRemoteAPI::Camera object. It takes a little time because of SSDP search.
 3. Now you can call not only wrapper methods but also original APIs as a method!
 
-If you are using Linux, you can use bundled scripts and its interface method.
-and then If you want to take a picture and save it:
+If you want to take a picture and save it:
 
 ```ruby
 require 'sony_camera_remote_api'
