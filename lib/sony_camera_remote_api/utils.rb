@@ -67,6 +67,7 @@ module SonyCameraRemoteAPI
       return nil, result.size
     end
 
+
     # Print array.
     # @param [Array] array
     # @param [Fixnum] horizon

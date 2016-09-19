@@ -7,6 +7,7 @@ require 'sony_camera_remote_api'
 require 'sony_camera_remote_api/scripts'
 require 'sony_camera_remote_api/client/main'
 require 'sony_camera_remote_api/utils'
+require 'sony_camera_remote_api/shelf'
 require 'io/console'
 require 'fileutils'
 
@@ -76,14 +77,14 @@ RSpec.configure do |c|
       STDIN.getch.chr
 
       # Select camera and connect using sonycam utility
-      `./exe/sonycam config use --ssid #{model_name}`
+      `./exe/sonycam shelf use #{model_name}`
       unless load_and_connect
         puts 'ERROR: Test exited because wi-fi connection setup failed!'
         exit! 1
       end
 
       # Get saved endpoints URLs
-      config = JSON.load `./exe/sonycam config default --json`
+      config = JSON.load `./exe/sonycam shelf default --json`
 
       # Camera object for lib test
       cam = SonyCameraRemoteAPI::Camera.new reconnect_by: method(:load_and_restart)
@@ -115,12 +116,12 @@ end
 
 # Connect and reconnect to the camera.
 def load_and_connect
-  SonyCameraRemoteAPI::Scripts.run_external_command './exe/sonycam config connect'
+  SonyCameraRemoteAPI::Scripts.run_external_command './exe/sonycam shelf connect'
 end
 
 # Connect and reconnect to the camera.
 def load_and_restart
-  SonyCameraRemoteAPI::Scripts.run_external_command './exe/sonycam config connect --restart'
+  SonyCameraRemoteAPI::Scripts.run_external_command './exe/sonycam shelf connect --restart'
 end
 
 

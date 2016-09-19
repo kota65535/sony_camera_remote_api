@@ -1,14 +1,13 @@
 require 'sony_camera_remote_api'
 require 'sony_camera_remote_api/logging'
 require 'sony_camera_remote_api/scripts'
-require 'sony_camera_remote_api/client/config'
+require 'sony_camera_remote_api/client/shelf'
 require 'fileutils'
 require 'thor'
 require 'highline/import'
 require 'yaml'
 require 'time'
 require 'pp'
-
 
 module SonyCameraRemoteAPI
   # CLI client module
@@ -20,9 +19,8 @@ module SonyCameraRemoteAPI
     class Main < Thor
       include Utils
       include Scripts
-      include ConfigUtils
 
-      register Config, 'config', 'config [commands] [options]', 'Configure camera connections'
+      register ShelfCmd, 'shelf', 'shelf [commands] [options]', 'Managing camera connections'
 
       # Global options
       class_option :setting, type: :boolean, desc: 'Show current camera settings'
@@ -30,8 +28,6 @@ module SonyCameraRemoteAPI
       class_option :dir, type: :string, desc: 'Output directory', banner: 'DIR'
       class_option :config, aliases: '-c', type: :string, desc: 'Config file path', banner: 'FILE'
       class_option :ssid, type: :string, desc: 'SSID of the camera to connect'
-      class_option :pass, type: :string, desc: 'Password of camera to connect'
-      class_option :interface, type: :string, desc: 'Interface by which camera is connected'
       class_option :verbose, type: :numeric, desc: 'Increase verbosity', banner: 'LEVEL'
 
       no_tasks do
@@ -40,41 +36,37 @@ module SonyCameraRemoteAPI
         end
 
         def load_camera_config
-          # Check connection configuration is given by options
-          if [options[:ssid], options[:pass], options[:interface]].any?
-            if [options[:ssid], options[:pass], options[:interface]].all?
-              return { 'ssid' => options[:ssid], 'pass' => options[:pass], 'interface' => options[:interface] }
-            else
-              puts "'--ssid', '--pass', '--interface' must be present all at a time!"
-              return
-            end
+          # If SSID is specified, load the camera config.
+          if options[:ssid]
+            @shelf.get options[:ssid] || @shelf.get_default
           else
-            config = default_camera config_file
-            config
+            @shelf.get_default
           end
         end
 
         # Load camera config and connect
         def load_and_connect
           config = load_camera_config
-          return if config.nil?
-          # Connect to camera by external script
+          unless config
+            puts 'Failed to load camera config!'
+            exit 1
+          end
           unless Scripts.connect(config['interface'], config['ssid'], config['pass'])
             puts 'Failed to connect!'
-            return
+            exit 1
           end
           config
         end
 
         # Initialize camera instance
         def init_camera
+          @shelf = Shelf.new config_file
           config = load_and_connect
-          exit(1) if config.nil?
 
           puts 'Initializing camera...'
           if config['endpoints'].nil?
             @cam = SonyCameraRemoteAPI::Camera.new reconnect_by: method(:load_and_connect)
-            save_ssdp_config config_file, @cam.endpoints
+            @shelf.set_endpoints config['ssid'], @cam.endpoints
             puts 'SSDP configuration saved.'
           else
             @cam = SonyCameraRemoteAPI::Camera.new endpoints: config['endpoints'],

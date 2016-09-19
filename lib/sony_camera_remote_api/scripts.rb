@@ -16,6 +16,7 @@ module SonyCameraRemoteAPI
       run_external_command "sudo bash #{connection_script} #{interface} #{ssid} #{pass}"
     end
 
+
     # Restart the interface and connect to camera by Wi-Fi.
     # @param [String] interface Interface name, e.g. wlan0
     # @param [String] ssid SSID of the camera to connect
