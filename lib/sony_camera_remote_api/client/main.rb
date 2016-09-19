@@ -1,6 +1,7 @@
 require 'sony_camera_remote_api'
 require 'sony_camera_remote_api/logging'
 require 'sony_camera_remote_api/scripts'
+require 'sony_camera_remote_api/version'
 require 'sony_camera_remote_api/client/shelf'
 require 'fileutils'
 require 'thor'
@@ -633,6 +634,13 @@ module SonyCameraRemoteAPI
         finalize
       end
 
+      # For 'sonycam --version'
+      map %w[--version -v] => :__print_version
+
+      desc '--version, -v', 'print the version'
+      def __print_version
+        puts SonyCameraRemoteAPI::VERSION
+      end
     end
   end
 end
