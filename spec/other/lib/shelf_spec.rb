@@ -96,9 +96,9 @@ module SonyCameraRemoteAPI
         sbj.add 'ssid-2', 'pass-2', 'wlan-2'
       end
       it 'sets endpoints' do
-        sbj.set_endpoints endpoints, 'ssid-1'
+        sbj.set_ep endpoints, 'ssid-1'
         expect(sbj.get('ssid-1')['endpoints']).to match endpoints
-        sbj.set_endpoints endpoints, 'ssid-0'
+        sbj.set_ep endpoints, 'ssid-0'
         expect(sbj.get('ssid-2')['endpoints']).to eq nil
       end
     end

@@ -125,7 +125,7 @@ module SonyCameraRemoteAPI
 
     # Set endpoint information to a camera config.
     # @return [Boolean] +true+ if successfully set endpoints, +false+ otherwise.
-    def set_endpoints(endpoints, ssid = nil)
+    def set_ep(endpoints, ssid = nil)
       entry = get(ssid)
       if entry
         entry['endpoints'] = endpoints
@@ -136,9 +136,21 @@ module SonyCameraRemoteAPI
     end
 
 
+    # Get endpoint information to a camera config.
+    # @return [Boolean] +true+ if successfully set endpoints, +false+ otherwise.
+    def ep(ssid = nil)
+      entry = get(ssid)
+      if entry
+        entry['endpoints']
+      else
+        nil
+      end
+    end
+
+
     # Set interface by which the camera is connected.
     # @return [Boolean] +true+ if successfully set default camera, +false+ otherwise.
-    def set_interface(interface, ssid = nil)
+    def set_if(interface, ssid = nil)
       entry = get(ssid)
       if entry
         entry['interface'] = interface

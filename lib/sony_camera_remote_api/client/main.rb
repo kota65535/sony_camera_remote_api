@@ -67,7 +67,7 @@ module SonyCameraRemoteAPI
           puts 'Initializing camera...'
           if config['endpoints'].nil?
             @cam = SonyCameraRemoteAPI::Camera.new reconnect_by: method(:load_and_connect)
-            @shelf.set_endpoints config['ssid'], @cam.endpoints
+            @shelf.set_ep config['ssid'], @cam.endpoints
             puts 'SSDP configuration saved.'
           else
             @cam = SonyCameraRemoteAPI::Camera.new endpoints: config['endpoints'],

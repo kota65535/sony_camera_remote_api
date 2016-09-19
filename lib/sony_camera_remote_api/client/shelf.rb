@@ -155,7 +155,7 @@ module SonyCameraRemoteAPI
             return
           end
         end
-        @shelf.set_interface if_name, specified['ssid'] if specified
+        @shelf.set_if if_name, specified['ssid'] if specified
         invoke :list, [], options
       end
 
