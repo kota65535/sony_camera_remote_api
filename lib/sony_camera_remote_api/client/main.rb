@@ -365,14 +365,14 @@ module SonyCameraRemoteAPI
       end
 
 
-      desc 'cont [options]', 'Capture still images continuously'
+      desc 'rapid [options]', 'Capture still images continuously'
       option :mode, type: :string, desc: 'Continuous shooting mode', banner: 'MODE', default: 'Single'
       option :speed, type: :string, desc: 'Continuous shooting speed', banner: 'MODE'
       option :time, type: :numeric, desc: 'Recording time (sec)', banner: 'NSEC'
       still_common_options
       common_options
       option :transfer, type: :boolean, desc: 'Transfer postview image', default: false
-      def cont
+      def rapid
         init_camera
         unless @cam.support_group? :ContShootingMode
           puts 'This camera does not support continuous shooting mode. Exiting...'
