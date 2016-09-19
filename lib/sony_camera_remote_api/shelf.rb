@@ -163,6 +163,20 @@ module SonyCameraRemoteAPI
     end
 
 
+    # Restart interface, and then connect to the camera.
+    # If SSID is not given, default camera is used.
+    # @param [String] ssid SSID
+    # @return [Boolean] +true+ if successfully connected, +false+ otherwise.
+    def reconnect(ssid = nil)
+      entry = get(ssid)
+      if entry
+        Scripts.restart_and_connect entry['interface'], entry['ssid'], entry['pass']
+      else
+        false
+      end
+    end
+
+
     private
 
     # Get camera whose SSID uniquely matches with specified string.
