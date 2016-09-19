@@ -70,10 +70,10 @@ module SonyCameraRemoteAPI
         if @shelf.get
           answer = $terminal.ask('Do you want set this camera as default? ') { |q| q.validate = /[yn]/i; q.default = 'y' }
           if answer == 'y'
-            @shelf.use ssid
+            @shelf.select ssid
           end
         else
-          @shelf.use ssid
+          @shelf.select ssid
         end
 
         invoke :list, [], options
@@ -131,12 +131,12 @@ module SonyCameraRemoteAPI
       end
 
 
-      desc 'use <ID or SSID>', 'Select a camera as default'
-      def use(id_or_ssid)
+      desc 'select <ID or SSID>', 'Select a camera as default'
+      def select(id_or_ssid)
         read_or_create_shelf
 
         specified = get_id_or_ssid id_or_ssid
-        @shelf.use specified['ssid'] if specified
+        @shelf.select specified['ssid'] if specified
 
         invoke :list, [], options
       end

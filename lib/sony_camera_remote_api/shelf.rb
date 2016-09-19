@@ -103,7 +103,7 @@ module SonyCameraRemoteAPI
 
     # Select a camera config as default.
     # @return [Boolean] +true+ if successfully set default camera, +false+ otherwise.
-    def use(ssid)
+    def select(ssid)
       entry = get(ssid)
       if entry
         @config['default'] = entry['ssid']
@@ -111,6 +111,15 @@ module SonyCameraRemoteAPI
       else
         false
       end
+    end
+
+
+    # Add a camera config, and select it
+    # @param [Boolean] overwrite Overwrite if the same SSID's config is already added.
+    # @return [Boolean] +true+ if successfully added, +false+ otherwise.
+    def add_and_select(ssid, pass, interface, overwrite: false)
+      add ssid, pass, interface, overwrite: overwrite
+      select ssid
     end
 
 

@@ -114,9 +114,9 @@ module SonyCameraRemoteAPI
       end
       it 'set default camera' do
         expect(sbj.get).to match 'ssid' => 'ssid-1', 'pass' => 'pass-1', 'interface' => 'wlan-1'
-        sbj.use('ssid-2')
+        sbj.select('ssid-2')
         expect(sbj.get).to match 'ssid' => 'ssid-2', 'pass' => 'pass-2', 'interface' => 'wlan-2'
-        sbj.use('d-3')
+        sbj.select('d-3')
         expect(sbj.get).to match 'ssid' => 'ssid-3', 'pass' => 'pass-3', 'interface' => 'wlan-3'
 
       end
