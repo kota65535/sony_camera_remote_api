@@ -67,13 +67,13 @@ module SonyCameraRemoteAPI
         end
 
         # Ask user to set default or not.
-        if @shelf.get_default
+        if @shelf.get
           answer = $terminal.ask('Do you want set this camera as default? ') { |q| q.validate = /[yn]/i; q.default = 'y' }
           if answer == 'y'
-            @shelf.set_default ssid
+            @shelf.use ssid
           end
         else
-          @shelf.set_default ssid
+          @shelf.use ssid
         end
 
         invoke :list, [], options
@@ -84,7 +84,7 @@ module SonyCameraRemoteAPI
       def list
         read_or_create_shelf
         cameras = @shelf.get_all
-        default = @shelf.get_default
+        default = @shelf.get
 
         # No camera has been added, exit with a message.
         if cameras.empty?
@@ -136,7 +136,7 @@ module SonyCameraRemoteAPI
         read_or_create_shelf
 
         specified = get_id_or_ssid id_or_ssid
-        @shelf.set_default specified['ssid'] if specified
+        @shelf.use specified['ssid'] if specified
 
         invoke :list, [], options
       end
@@ -149,13 +149,13 @@ module SonyCameraRemoteAPI
         if id_or_ssid
           specified = get_id_or_ssid id_or_ssid
         else
-          specified = @shelf.get_default
+          specified = @shelf.get
           unless specified
             puts 'ERROR: Default camera is not selected yet!'
             return
           end
         end
-        @shelf.set_interface specified['ssid'], if_name if specified
+        @shelf.set_interface if_name, specified['ssid'] if specified
         invoke :list, [], options
       end
 
@@ -165,10 +165,15 @@ module SonyCameraRemoteAPI
       def default
         read_or_create_shelf
 
+        default = @shelf.get
+        unless default
+          puts 'ERROR: Default camera is not selected yet!'
+          return
+        end
+
         if options[:json]
-          puts JSON.pretty_generate @shelf.get_default
+          puts JSON.pretty_generate default
         else
-          default = @shelf.get_default
           puts "SSID      : #{default['ssid']} "
           puts "Password  : #{default['pass']} "
           puts "Interface : #{default['interface']} "
@@ -189,7 +194,7 @@ module SonyCameraRemoteAPI
             return
           end
         else
-          camera = @shelf.get_default
+          camera = @shelf.get
           unless camera
             puts 'ERROR: Default camera is not selected yet!'
             return

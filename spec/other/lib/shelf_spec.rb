@@ -96,9 +96,9 @@ module SonyCameraRemoteAPI
         sbj.add 'ssid-2', 'pass-2', 'wlan-2'
       end
       it 'sets endpoints' do
-        sbj.set_endpoints('ssid-1', endpoints)
+        sbj.set_endpoints endpoints, 'ssid-1'
         expect(sbj.get('ssid-1')['endpoints']).to match endpoints
-        sbj.set_endpoints('ssid-0', endpoints)
+        sbj.set_endpoints endpoints, 'ssid-0'
         expect(sbj.get('ssid-2')['endpoints']).to eq nil
       end
     end
@@ -113,11 +113,11 @@ module SonyCameraRemoteAPI
         sbj.add 'ssid-3', 'pass-3', 'wlan-3'
       end
       it 'set default camera' do
-        expect(sbj.get_default).to match 'ssid' => 'ssid-1', 'pass' => 'pass-1', 'interface' => 'wlan-1'
-        sbj.set_default('ssid-2')
-        expect(sbj.get_default).to match 'ssid' => 'ssid-2', 'pass' => 'pass-2', 'interface' => 'wlan-2'
-        sbj.set_default('d-3')
-        expect(sbj.get_default).to match 'ssid' => 'ssid-3', 'pass' => 'pass-3', 'interface' => 'wlan-3'
+        expect(sbj.get).to match 'ssid' => 'ssid-1', 'pass' => 'pass-1', 'interface' => 'wlan-1'
+        sbj.use('ssid-2')
+        expect(sbj.get).to match 'ssid' => 'ssid-2', 'pass' => 'pass-2', 'interface' => 'wlan-2'
+        sbj.use('d-3')
+        expect(sbj.get).to match 'ssid' => 'ssid-3', 'pass' => 'pass-3', 'interface' => 'wlan-3'
 
       end
     end

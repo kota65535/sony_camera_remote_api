@@ -21,17 +21,15 @@ module SonyCameraRemoteAPI
 
     # Get a camera config by SSID.
     # You can use a partial string as long as it is unique.
+    # If SSID is not given, get the default camera config.
     # @param [String] ssid SSID
     # @return [Hash, nil] A camera config hash
-    def get(ssid)
-      get_unique(ssid)
-    end
-
-
-    # Get all camera configs.
-    # @return [Array<Hash>] An array of camera config hashes
-    def get_all
-      @config['camera']
+    def get(ssid = nil)
+      if ssid.nil?
+        get_default
+      else
+        get_unique(ssid)
+      end
     end
 
 
@@ -42,6 +40,13 @@ module SonyCameraRemoteAPI
       if index.between? 0, @config['camera'].size - 1
         @config['camera'][index]
       end
+    end
+
+
+    # Get all camera configs.
+    # @return [Array<Hash>] An array of camera config hashes
+    def get_all
+      @config['camera']
     end
 
 
@@ -76,13 +81,6 @@ module SonyCameraRemoteAPI
     end
 
 
-    # Remove all camera configs.
-    # @return [Boolean] +true+ if successfully removed, +false+ otherwise.
-    def remove_all
-      create
-    end
-
-
     # Remove a camera config by index.
     # @param [String] index Index
     # @return [Hash, nil]   A camera config hash
@@ -96,29 +94,16 @@ module SonyCameraRemoteAPI
     end
 
 
-    # Set endpoint information to a camera config.
-    # @return [Boolean] +true+ if successfully set endpoints, +false+ otherwise.
-    def set_endpoints(ssid, endpoints)
-      entry = get_unique(ssid)
-      if entry
-        entry['endpoints'] = endpoints
-        write
-      else
-        false
-      end
+    # Remove all camera configs.
+    # @return [Boolean] +true+ if successfully removed, +false+ otherwise.
+    def remove_all
+      create
     end
 
 
-    # Get the default camera config.
-    # @return [Hash, nil] A camera config hash
-    def get_default
-      @config['camera'].find { |c| c['ssid'] == @config['default'] }
-    end
-
-
-    # Set the camera config as default.
+    # Select a camera config as default.
     # @return [Boolean] +true+ if successfully set default camera, +false+ otherwise.
-    def set_default(ssid)
+    def use(ssid)
       entry = get(ssid)
       if entry
         @config['default'] = entry['ssid']
@@ -129,9 +114,22 @@ module SonyCameraRemoteAPI
     end
 
 
+    # Set endpoint information to a camera config.
+    # @return [Boolean] +true+ if successfully set endpoints, +false+ otherwise.
+    def set_endpoints(endpoints, ssid = nil)
+      entry = get(ssid)
+      if entry
+        entry['endpoints'] = endpoints
+        write
+      else
+        false
+      end
+    end
+
+
     # Set interface by which the camera is connected.
     # @return [Boolean] +true+ if successfully set default camera, +false+ otherwise.
-    def set_interface(ssid, interface)
+    def set_interface(interface, ssid = nil)
       entry = get(ssid)
       if entry
         entry['interface'] = interface
@@ -142,12 +140,12 @@ module SonyCameraRemoteAPI
     end
 
 
+    # Connect to the camera.
+    # If SSID is not given, default camera is used.
+    # @param [String] ssid SSID
+    # @return [Boolean] +true+ if successfully connected, +false+ otherwise.
     def connect(ssid = nil)
-      if ssid.nil?
-        entry = get_default
-      else
-        entry = get(ssid)
-      end
+      entry = get(ssid)
       if entry
         Scripts.connect entry['interface'], entry['ssid'], entry['pass']
       else
@@ -158,11 +156,20 @@ module SonyCameraRemoteAPI
 
     private
 
-    # @param [Hash, nil]
+    # Get camera whose SSID uniquely matches with specified string.
+    # @param [String] ssid SSID
+    # @return [Hash, nil] A camera config hash
     def get_unique(ssid)
       complete_ssid, num = partial_and_unique_match(ssid, @config['camera'].map { |c| c['ssid'] })
       return unless num == 1
       @config['camera'].find { |c| c['ssid'] == complete_ssid }
+    end
+
+
+    # Get the default camera config.
+    # @return [Hash, nil] A camera config hash
+    def get_default
+      @config['camera'].find { |c| c['ssid'] == @config['default'] }
     end
 
     # @return [Boolean]
