@@ -476,7 +476,7 @@ module SonyCameraRemoteAPI
     #   If liveview frame information is not supported, nil is always given.
     # @return [Thread] liveview downloading thread object
     def start_liveview_thread(size: nil, time: nil)
-      liveview_url = init_liveview size: size
+      liveview_url, frame_info_enabled = init_liveview size: size
       log.debug "liveview URL: #{liveview_url}"
 
       th = Thread.new do
@@ -512,14 +512,18 @@ module SonyCameraRemoteAPI
                       log.debug "  sequence  : #{obj.sequence_number}"
                       log.debug "  data_size : #{obj.payload.payload_data_size_wo_padding}"
                       log.debug "  pad_size  : #{obj.payload.padding_size}"
-                      block_time = Benchmark.realtime do
-                        yield(LiveviewImage.new(obj), frame_info)
+                      if frame_info_enabled && frame_info.nil?
+                        log.debug 'frame info is not present. skipping...'
+                      else
+                        block_time = Benchmark.realtime do
+                          yield(LiveviewImage.new(obj), frame_info)
+                        end
+                        log.debug "block time     : #{format('%.2f', block_time*1000)} ms."
                       end
-                      log.info "block time     : #{format('%.2f', block_time*1000)} ms."
                       count += 1
                     when 0x02
                       # When payload is liveview frame information
-                      log.info "frame count = #{obj.payload.frame_count}"
+                      log.debug "frame count = #{obj.payload.frame_count}"
                       if obj.payload.frame_count > 0
                         obj.payload.frame_data.each do |d|
                           log.debug "  category     : #{d.category}"
@@ -948,7 +952,12 @@ module SonyCameraRemoteAPI
     # Initialize and start liveview
     def init_liveview(size: nil)
       # Enable liveview frame information if available
-      setLiveviewFrameInfo!([{'frameInfo' => true}])
+      rsp = setLiveviewFrameInfo!([{'frameInfo' => true}])
+      if rsp && rsp.result
+        frame_info_enabled = true
+      else
+        frame_info_enabled = false
+      end
 
       if size
         # need to stop liveview when the liveview size is changed
@@ -957,9 +966,9 @@ module SonyCameraRemoteAPI
         unless available.include?(size)
           raise IllegalArgument, new, "The value '#{size}' is not available for parameter 'LiveviewSize'. current: #{current}, available: #{available}"
         end
-        startLiveviewWithSize([size]).result[0]
+        [ startLiveviewWithSize([size]).result[0], frame_info_enabled ]
       else
-        startLiveview.result[0]
+        [ startLiveview.result[0], frame_info_enabled ]
       end
     end
 
