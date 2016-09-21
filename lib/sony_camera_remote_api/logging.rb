@@ -35,8 +35,12 @@ module Logging
   # Log file is common in each user class.
   # @param [String, IO, Array<String, IO>] log_file file name or stream to output log.
   # @return [void]
-  def output_to(*log_file)
+  def set_output(*log_file)
     Logging.log_file self.class.name, log_file
+  end
+
+  def set_level(level)
+    @@level = level
   end
 
   #--------------------PUBLIC METHODS END----------------------
@@ -46,6 +50,8 @@ module Logging
   @log_file = []
   # Use a hash class-ivar to cache a unique Logger per class.
   @loggers = {}
+
+  @@level = Logger::DEBUG
 
   # These module class methods are private to user class.
   class << self
@@ -70,6 +76,7 @@ module Logging
       end
       logger = Logger.new MultiDelegator.delegate(:write, :close).to(*fios)
       logger.progname = classname.split('::')[-1]
+      logger.level = @@level
       logger
     end
   end

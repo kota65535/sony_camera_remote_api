@@ -41,8 +41,9 @@ module SonyCameraRemoteAPI
     # @param [String, IO, Array<String, IO>] log_file   file name or stream to output log.
     # @param [Boolean] finalize   If true, stopRecMode API is called in the destructor.
     #   As far as I know, we don't have any trouble even if we never call stopRecMode.
-    def initialize(endpoints: nil, reconnect_by: nil, log_file: $stdout, finalize: false)
-      output_to log_file if log_file.present?
+    def initialize(endpoints: nil, reconnect_by: nil, log_file: $stdout, log_level: Logger::INFO, finalize: false)
+      set_output log_file
+      set_level  log_level
       @endpoints = endpoints || ssdp_search
       @reconnect_by = reconnect_by
       @api_manager = CameraAPIManager.new @endpoints, reconnect_by: @reconnect_by
