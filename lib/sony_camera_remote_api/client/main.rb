@@ -39,9 +39,9 @@ module SonyCameraRemoteAPI
         def load_camera_config
           # If SSID is specified, load the camera config.
           if options[:ssid]
-            @shelf.get options[:ssid] || @shelf.get_default
+            @shelf.get options[:ssid] || @shelf.get
           else
-            @shelf.get_default
+            @shelf.get
           end
         end
 
