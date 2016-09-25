@@ -181,7 +181,7 @@ module SonyCameraRemoteAPI
     #   puts "available values: #{result[:available]}"
     #   puts "supported values: #{result[:supported]}"
     def get_parameter(group_name, available: true, supported: true, **opts)
-      result = { current: nil, available: [], supported: [] }
+      result = { current: nil, available: nil, supported: nil }
       begin
         grp = search_group group_name
       rescue APIForbidden, APINotSupported => e
@@ -205,7 +205,7 @@ module SonyCameraRemoteAPI
 
 
     # Almost same as get_parameter, but this method does not raise Exception.
-    # @return [Hash] current/available/supported values. If any error occurs, the value that cannot get become nil or empty array.
+    # @return [Hash] current/available/supported values. If any error occurs, the value that cannot get become nil.
     # @see get_parameter
     # @example
     #   # Initialize
@@ -237,18 +237,24 @@ module SonyCameraRemoteAPI
     # @param [Symbol] group_name Parameter name
     # @param [Object] value New value to be set
     # @return [Hash]  current/available/old values after setting parameter.
+    #   If given value is equal to current value, available/old values become nil.
     # @raise APIForbidden, APINotSupported, APINotAvailable, IllegalArgument
     # @example
     #   # Initialize
     #   cam = SonyCameraRemoteAPI::Camera.new
     #   cam.change_function_to_shoot 'still', 'Single'
     #
-    #   result = cam.set_parameter :FlashMode, 'on'
+    #   result = cam.set_parameter :FlashMode, 'slowSync'
+    #   if result[:old]
+    #     puts "The value is changed from '#{result[:old]}' to '#{result[:current]}'."
+    #   else
+    #     puts 'The value is not changed.'
+    #   end
     #   puts "current value   : #{result[:current]}"
     #   puts "available values: #{result[:available]}"
     #   puts "old value       : #{result[:old]}"
     def set_parameter(group_name, value, *args, **opts)
-      result = { current: nil, available: [], old: nil }
+      result = { current: nil, available: nil, old: nil }
       begin
         grp = search_group group_name
       rescue APIForbidden, APINotSupported => e
@@ -260,7 +266,6 @@ module SonyCameraRemoteAPI
         value = grp.preprocess_value(value, args, condition)
         # If value is equal to current value, do nothing.
         result.merge! grp.current_value(@api_manager, condition, **opts)
-        result[:old] = result[:current]
         if grp.eq_current? value, result[:current], condition
           return result
         end
@@ -283,7 +288,8 @@ module SonyCameraRemoteAPI
 
     # Almost same as set_parameter, but this method does not raise Exception.
     # @return [Hash] current/available/old values after setting parameter.
-    #   If any error occurs, the value that cannot get become nil or empty array.
+    #   If given value is equal to current value, available/old values become nil.
+    #   If any error occurs, the values that cannot get become nil.
     # @see set_parameter
     # @example
     #   # Initialize
