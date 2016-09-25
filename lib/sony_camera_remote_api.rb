@@ -408,8 +408,8 @@ module SonyCameraRemoteAPI
     #   end
     def act_touch_focus(x, y)
       return false unless support? :setTouchAFPosition
-      set_parameter! :TrackingFocus, 'Off'
       cancel_focus
+      set_parameter! :TrackingFocus, 'Off'
 
       x = [[x, 100].min, 0].max
       y = [[y, 100].min, 0].max
@@ -446,9 +446,10 @@ module SonyCameraRemoteAPI
     #     th.join
     #   end
     def act_tracking_focus(x, y)
-      return false unless support_group? :TrackingFocus
-      set_parameter :TrackingFocus, 'On'
+      return false unless support? :TrackingFocus
       cancel_focus
+      set_parameter :TrackingFocus, 'On'
+
 
       x = [[x, 100].min, 0].max
       y = [[y, 100].min, 0].max

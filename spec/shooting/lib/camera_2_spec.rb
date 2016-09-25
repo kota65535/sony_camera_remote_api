@@ -108,21 +108,12 @@ module SonyCameraRemoteAPI
       end
       it 'transitions 2 type focuses without error' do
         expect(cam).to receive(:actHalfPressShutter).at_most(3).times.and_call_original
-        expect(cam).to receive(:setTouchAFPosition).at_most(2).times.and_call_original
+        expect(cam).to receive(:setTouchAFPosition).at_most(3).times.and_call_original
         expect(cam.act_focus).to eq(true).or eq(false)
         expect(cam.act_focus).to eq(true).or eq(false)
         expect(cam.act_touch_focus(pos, pos)).to eq(true).or eq(false)
         expect(cam.act_touch_focus(pos, pos)).to eq(true).or eq(false)
         expect(cam.act_focus).to eq(true).or eq(false)
-      end
-      it 'transitions 2 type focuses without error' do
-        expect(cam).to receive(:actHalfPressShutter).exactly(3).times.and_call_original
-        expect(cam).to receive(:setTouchAFPosition).exactly(2).times.and_call_original
-        expect(cam.act_focus(force: true)).to eq(true).or eq(false)
-        expect(cam.act_focus(force: true)).to eq(true).or eq(false)
-        expect(cam.act_touch_focus(pos, pos, force: true)).to eq(true).or eq(false)
-        expect(cam.act_touch_focus(pos, pos, force: true)).to eq(true).or eq(false)
-        expect(cam.act_focus(force: true)).to eq(true).or eq(false)
       end
     end
 
@@ -145,18 +136,6 @@ module SonyCameraRemoteAPI
         expect(cam.act_tracking_focus(pos, pos)).to eq(true).or eq(false)
         expect(cam.act_touch_focus(pos, pos)).to eq(true).or eq(false)
         expect(cam.act_focus).to eq(true).or eq(false)
-      end
-      it 'transitions 3 type focuses without error' do
-        expect(cam).to receive(:actHalfPressShutter).exactly(3).times.and_call_original
-        expect(cam).to receive(:setTouchAFPosition).exactly(2).times.and_call_original
-        expect(cam).to receive(:actTrackingFocus).exactly(2).times.and_call_original
-        expect(cam.act_focus(force: true)).to eq(true).or eq(false)
-        expect(cam.act_touch_focus(pos, pos, force: true)).to eq(true).or eq(false)
-        expect(cam.act_tracking_focus(pos, pos, force: true)).to eq(true).or eq(false)
-        expect(cam.act_focus(force: true)).to eq(true).or eq(false)
-        expect(cam.act_tracking_focus(pos, pos, force: true)).to eq(true).or eq(false)
-        expect(cam.act_touch_focus(pos, pos, force: true)).to eq(true).or eq(false)
-        expect(cam.act_focus(force: true)).to eq(true).or eq(false)
       end
     end
 
