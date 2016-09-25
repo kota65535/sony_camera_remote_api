@@ -22,10 +22,11 @@ module SonyCameraRemoteAPI
     include SSDP
     include Utils
 
-    def_delegators :@api_manager, :apis, :method_missing, :getEvent, :getAvailableApiList,
-                   :wait_event,
-                   :get_parameter, :get_parameter!, :set_parameter, :set_parameter!, :get_current, :get_current!,
-                   :support?, :support_group?
+    def_delegators :@api_manager, :method_missing, :getEvent, :getAvailableApiList, :wait_event,
+                                  :get_parameter, :get_parameter!,
+                                  :set_parameter, :set_parameter!,
+                                  :get_current, :get_current!,
+                                  :support?, :parameters
 
     attr_reader :endpoints
 

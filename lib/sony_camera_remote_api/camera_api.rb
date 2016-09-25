@@ -16,7 +16,8 @@ module SonyCameraRemoteAPI
 
     def_delegators :@api_group_manager, :get_parameter, :get_parameter!,
                                         :set_parameter, :set_parameter!,
-                                        :get_current, :get_current!
+                                        :get_current, :get_current!,
+                                        :parameters
     def_delegators :@raw_api_manager, :apis
 
 
