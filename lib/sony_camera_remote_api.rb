@@ -103,7 +103,6 @@ module SonyCameraRemoteAPI
     #   * Single     : take a single picture
     #   * Burst      : take 10 pictures at a time
     #   * MotionShot : take 10 pictures and render the movement into a single picture
-    # @param [Boolean]  focus     Flag to focus on before capturing.
     # @param [Boolean]  transfer  Flag to transfer the postview image.
     # @param [String]   filename  Name of image file to be transferred. If not given, original name is used.
     #    Only available in Single/MotionShot shooting mode.
@@ -121,8 +120,7 @@ module SonyCameraRemoteAPI
     #   change_function_to_shoot('still', 'Burst')
     #   capture_still
     #   capture_still(prefix: 'TEST')
-    def capture_still(focus: true, transfer: true, filename: nil, prefix: nil, dir: nil)
-      act_focus if focus
+    def capture_still(transfer: true, filename: nil, prefix: nil, dir: nil)
       wait_event { |r| r[1]['cameraStatus'] == 'IDLE' }
       log.info 'Capturing...'
       postview_url = ''
@@ -152,15 +150,13 @@ module SonyCameraRemoteAPI
     # @note You have to set shooting mode to 'still' and continuous shooting mode to following modes:
     #   * Continuous          : take pictures continuously until stopped.
     #   * Spd Priority Cont.  : take pictures continuously at a rate faster than 'Continuous'.
-    # @param [Boolean]  focus   Flag to focus on before capturing.
     # @return [void]
     # @example Do continuous shooting and transfer:
     #   change_function_to_shoot('still', 'Continuous')
     #   start_continuous_shooting
     #   ...
     #   stop_continuous_shooting(transfer: true)
-    def start_continuous_shooting(focus: true)
-      act_focus if focus
+    def start_continuous_shooting
       wait_event { |r| r[1]['cameraStatus'] == 'IDLE' }
       startContShooting
       wait_event { |r| r[1]['cameraStatus'] == 'StillCapturing' }
@@ -245,7 +241,7 @@ module SonyCameraRemoteAPI
     #   ...
     #   stop_interval_recording(transfer: true)
     def start_interval_recording
-      act_focus
+      wait_event { |r| r[1]['cameraStatus'] == 'IDLE' }
       startIntervalStillRec
       wait_event { |r| r[1]['cameraStatus'] == 'IntervalRecording' }
       log.info 'Started interval still recording.'
@@ -350,16 +346,22 @@ module SonyCameraRemoteAPI
     end
 
 
-    # Act focus, which is the same as half-pressing shutter button.
-    # If already focued, this method does nothing unless 'force' parameter specified as true.
-    # @param [Boolean] force Re-forcus if the camera has already focused.
+    # Do focus, which is the same as half-pressing the shutter button.
     # @return [Boolean] +true+ if focus succeeded, +false+ if failed.
     # @example
-    #   # Try to focus on and succeeded.
-    #   act_focus     #=> true
-    def act_focus(force: false)
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   # Focus function is available only 'still' shoot mode
+    #   cam.change_function_to_shoot 'still'
+    #   # Capture forever only when focus succeeded.
+    #   loop do
+    #     if cam.act_focus
+    #       cam.capture_still
+    #     end
+    #   end
+    def act_focus
       return false unless support? :actHalfPressShutter
-      return true  unless needs_focus?(force: force)
+      cancel_focus
       actHalfPressShutter
       rsp = wait_event { |r| ['Focused', 'Failed'].include? r[35]['focusStatus'] }
       if rsp[35]['focusStatus'] =='Focused'
@@ -374,25 +376,24 @@ module SonyCameraRemoteAPI
     end
 
 
-    # Act touch focus, by which we can specify the focus position.
-    # The focus position is expressed by percentage to the origin of coordinates, which is upper left of liveview images.
-    # If already focued, this method does nothing unless 'force' parameter specified as true.
+    # Do touch focus, by which we can specify the focus position.
     # @note Tracking focus and Touch focus is exclusive function.
     #   Tracking focus is disabled automatically by calling this method.
     # @param [Fixnum] x   Percentage of X-axis position.
     # @param [Fixnum] y   Percentage of Y-axis position.
-    # @param [Boolean] force Re-forcus if the camera has already focused.
     # @return [Boolean]   AFType ('Touch' or 'Wide') if focus succeeded. nil if failed.
     # @see Touch AF position parameter in API reference
     # @example
-    #   # Try to focus on bottom-left position and succeeded with 'Wide' type focus.
-    #   act_touch_focus(10, 90)     #=> 'Wide'
-    #   # Try to focus on upper-right position but failed.
-    #   act_touch_focus(90, 10)     #=> nil
-    def act_touch_focus(x, y, force: false)
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   # Try to focus on upper-middle position.
+    #   if cam.act_touch_focus(50, 10)
+    #     cam.capture_still
+    #   end
+    def act_touch_focus(x, y)
       return false unless support? :setTouchAFPosition
-      return true  unless needs_focus?(force: force)
       set_parameter! :TrackingFocus, 'Off'
+      cancel_focus
 
       x = [[x, 100].min, 0].max
       y = [[y, 100].min, 0].max
@@ -408,20 +409,30 @@ module SonyCameraRemoteAPI
     end
 
 
-    # Act trackig focus, by which the focus position automatically track the object.
+    # Do tracking focus, by which the focus position automatically track the object.
     # The focus position is expressed by percentage to the origin of coordinates, which is upper left of liveview images.
-    # If already focued, this method does nothing unless 'force' parameter specified as true.
     # @param [Fixnum] x   Percentage of X-axis position.
     # @param [Fixnum] y   Percentage of Y-axis position.
-    # @param [Boolean] force Re-forcus if the camera has already focused.
     # @return [Boolean] +true+ if focus succeeded, +false+ if failed.
     # @example
-    #   # Act tracking focus from the center position, and succeeded to start tracking.
-    #   act_tracking_focus(50, 50)    #=> true
-    def act_tracking_focus(x, y, force: false)
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_shoot 'still'
+    #   # Start tracking focus from the center position
+    #   if cam.act_tracking_focus(50, 50)
+    #     th = cam.start_liveview_thread do |img, info|
+    #       info.frames.each do |f|
+    #         # Get tracking focus position from the liveview frame info
+    #         puts "top-left:     (#{f.top_left.x}, #{f.top_left.y})"
+    #         puts "bottom-right: (#{f.bottom_right.x}, #{f.bottom_right.y})"
+    #       end
+    #     end
+    #     th.join
+    #   end
+    def act_tracking_focus(x, y)
       return false unless support_group? :TrackingFocus
-      return true  unless needs_focus?(force: force)
       set_parameter :TrackingFocus, 'On'
+      cancel_focus
 
       x = [[x, 100].min, 0].max
       y = [[y, 100].min, 0].max
@@ -439,14 +450,35 @@ module SonyCameraRemoteAPI
 
     # Return whether the camera has focused or not.
     # @return [Boolean] +true+ if focused, +false+ otherwise.
+    # @see act_focus
+    # @see act_touch_focus
     def focused?
       result = getEvent(false).result
       result[35] && result[35]['focusStatus'] == 'Focused'
     end
 
 
-    # Cancel all type of focuses (half press, touch focus, tracking focus).
+    # Return whether the camera is tracking an object for tracking focus.
+    # @return [Boolean] +true+ if focused, +false+ otherwise.
+    # @see act_tracking_focus
+    def tracking?
+      result = getEvent(false).result
+      result[54] && result[54]['trackingFocusStatus'] == 'Tracking'
+    end
+
+
+    # Cancel focus If camera has been focused.
     # @return [void]
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_shoot 'still', 'Single'
+    #   # Try to focus on upper-middle position.
+    #   if cam.act_tracking_focus(50, 10)
+    #     puts cam.focused?
+    #     cam.capture_still
+    #     puts cam.focused?
+    #   end
     def cancel_focus
       result = getEvent(false).result
       # Canceling tracking/touch focus should be preceded for half-press
@@ -937,16 +969,6 @@ module SonyCameraRemoteAPI
 
       log.debug "  Short zoom finished: #{current} -> #{final} (target: #{absolute})"
       [final, absolute - final]
-    end
-
-
-    def needs_focus?(force: false)
-      if force
-        cancel_focus
-        true
-      else
-        ! focused?
-      end
     end
 
 
