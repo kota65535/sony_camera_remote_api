@@ -140,7 +140,7 @@ module SonyCameraRemoteAPI
       end
     end
 
-    describe "'shelf use' command" do
+    describe "'shelf select' command" do
       before :each do
         FileUtils.rm 'test.conf' if File.exists? 'test.conf'
         allow_any_instance_of(HighLine).to receive(:ask).and_return("n")
@@ -154,14 +154,14 @@ module SonyCameraRemoteAPI
         output = capture(:stdout) { client.start(%W(shelf list --file #{config})) }
         expect(output).to include("=> 0: SSID      : foo_0")
       end
-      context 'when ID is used' do
+      context 'when ID is selectd' do
         it 'selects camera' do
-          output = capture(:stdout) { client.start(%W(shelf use 0 --file #{config})) }
+          output = capture(:stdout) { client.start(%W(shelf select 0 --file #{config})) }
           expect(output).to include("=> 0: SSID      : foo_0")
           expect(output).to include("   1: SSID      : foo_1")
           expect(output).to include("   2: SSID      : foo_11")
           expect(output).to include("   3: SSID      : foo_2")
-          output = capture(:stdout) { client.start(%W(shelf use 2 --file #{config})) }
+          output = capture(:stdout) { client.start(%W(shelf select 2 --file #{config})) }
           expect(output).to include("   0: SSID      : foo_0")
           expect(output).to include("   1: SSID      : foo_1")
           expect(output).to include("=> 2: SSID      : foo_11")
@@ -169,7 +169,7 @@ module SonyCameraRemoteAPI
         end
         context 'when ID is invalid' do
           it 'does not select camera' do
-            output = capture(:stdout) { client.start(%W(shelf use 4 --file #{config})) }
+            output = capture(:stdout) { client.start(%W(shelf select 4 --file #{config})) }
             expect(output).to include("=> 0: SSID      : foo_0")
             expect(output).to include("   1: SSID      : foo_1")
             expect(output).to include("   2: SSID      : foo_11")
@@ -177,10 +177,10 @@ module SonyCameraRemoteAPI
           end
         end
       end
-      context 'when SSID is used' do
+      context 'when SSID is selectd' do
         context 'when SSID matches compelely' do
           it 'selects camera' do
-            output = capture(:stdout) { client.start(%W(shelf use foo_1 --file #{config})) }
+            output = capture(:stdout) { client.start(%W(shelf select foo_1 --file #{config})) }
             expect(output).to include("   0: SSID      : foo_0")
             expect(output).to include("=> 1: SSID      : foo_1")
             expect(output).to include("   2: SSID      : foo_11")
@@ -189,7 +189,7 @@ module SonyCameraRemoteAPI
         end
         context 'when SSID partially matches but identical' do
           it 'selects entry' do
-            output = capture(:stdout) { client.start(%W(shelf use o_11 --file #{config})) }
+            output = capture(:stdout) { client.start(%W(shelf select o_11 --file #{config})) }
             expect(output).to include("   0: SSID      : foo_0")
             expect(output).to include("   1: SSID      : foo_1")
             expect(output).to include("=> 2: SSID      : foo_11")
@@ -198,7 +198,7 @@ module SonyCameraRemoteAPI
         end
         context 'when SSID partially matches but ambigous' do
           it 'does not select entry' do
-            output = capture(:stdout) { client.start(%W(shelf use foo --file #{config})) }
+            output = capture(:stdout) { client.start(%W(shelf select foo --file #{config})) }
             expect(output).to include("=> 0: SSID      : foo_0")
             expect(output).to include("   1: SSID      : foo_1")
             expect(output).to include("   2: SSID      : foo_11")
@@ -207,7 +207,7 @@ module SonyCameraRemoteAPI
         end
         context 'when SSID does not match' do
           it 'does not select entry' do
-            output = capture(:stdout) { client.start(%W(shelf use bar --file #{config})) }
+            output = capture(:stdout) { client.start(%W(shelf select bar --file #{config})) }
             expect(output).to include("=> 0: SSID      : foo_0")
             expect(output).to include("   1: SSID      : foo_1")
             expect(output).to include("   2: SSID      : foo_11")

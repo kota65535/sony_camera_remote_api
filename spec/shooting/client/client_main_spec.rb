@@ -144,7 +144,7 @@ describe SonyCameraRemoteAPI::Client::Main do
     end
   end
 
-  describe 'cont command' do
+  describe 'rapid command' do
     before do
       set_mode_dial cam, 'still'
     end
@@ -152,7 +152,7 @@ describe SonyCameraRemoteAPI::Client::Main do
       context 'in burst mode' do
         it 'captures images by burst mode and transfer postviews' do
           begin
-            output = capture(:stdout, true) { client.start(%W(cont --dir #{image_dir} --mode Burst --speed 10fps\ 1sec --transfer)) }
+            output = capture(:stdout, true) { client.start(%W(rapid --dir #{image_dir} --mode Burst --speed 10fps\ 1sec --transfer)) }
           rescue SystemExit => e
             expect(e.status).to eq 0
           end
@@ -164,7 +164,7 @@ describe SonyCameraRemoteAPI::Client::Main do
       context 'in motion-shot mode' do
         it 'captures images by motion-shot mode and transfer postview' do
           begin
-            output = capture(:stdout, true) { client.start(%W(cont --dir #{image_dir} --mode MotionShot --speed 10fps\ 1sec --transfer)) }
+            output = capture(:stdout, true) { client.start(%W(rapid --dir #{image_dir} --mode MotionShot --speed 10fps\ 1sec --transfer)) }
           rescue SystemExit => e
             expect(e.status).to eq 0
           end
@@ -176,7 +176,7 @@ describe SonyCameraRemoteAPI::Client::Main do
       context 'without --transfer option' do
         it 'does not transfer recorded stills' do
           begin
-            output = capture(:stdout, true) { client.start(%W(cont --dir #{image_dir} --mode Burst)) }
+            output = capture(:stdout, true) { client.start(%W(rapid --dir #{image_dir} --mode Burst)) }
           rescue SystemExit => e
             expect(e.status).to eq 0
           end
@@ -193,7 +193,7 @@ describe SonyCameraRemoteAPI::Client::Main do
       context 'with time option' do
         it 'captures stills continuously until the time elapses' do
           begin
-            output = capture(:stdout, true) { client.start(%W(cont --dir #{image_dir} --mode Continuous --time 3 --transfer)) }
+            output = capture(:stdout, true) { client.start(%W(rapid --dir #{image_dir} --mode Continuous --time 3 --transfer)) }
           rescue SystemExit => e
             expect(e.status).to eq 0
           end
@@ -204,7 +204,7 @@ describe SonyCameraRemoteAPI::Client::Main do
       end
       context 'without time option' do
         it 'captures stills continuously until SIGINT sent' do
-          output = capture_process(time: 6) { client.start(%W(cont --dir #{image_dir} --mode Continuous --transfer)) }
+          output = capture_process(time: 6) { client.start(%W(rapid --dir #{image_dir} --mode Continuous --transfer)) }
           matched = output.scan(/Transferred (DSC\d+\.JPG)/).map { |e| e[0] }
           expect(matched.size).to be >= 1
           expect(Dir.entries(image_dir)).to include(*matched)
@@ -213,7 +213,7 @@ describe SonyCameraRemoteAPI::Client::Main do
       context 'without --transfer option' do
         it 'does not transfer recorded stills' do
           begin
-            output = capture(:stdout, true) { client.start(%W(cont --dir #{image_dir} --mode Continuous --time 3)) }
+            output = capture(:stdout, true) { client.start(%W(rapid --dir #{image_dir} --mode Continuous --time 3)) }
           rescue SystemExit => e
             expect(e.status).to eq 0
           end
@@ -226,7 +226,7 @@ describe SonyCameraRemoteAPI::Client::Main do
     context 'with --setting option' do
       it 'shows current settings' do
         begin
-          output = capture(:stdout, true) { client.start(%W(cont --setting)) }
+          output = capture(:stdout, true) { client.start(%W(rapid --setting)) }
         rescue SystemExit => e
           expect(e.status).to eq 0
         end

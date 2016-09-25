@@ -77,7 +77,7 @@ RSpec.configure do |c|
       STDIN.getch.chr
 
       # Select camera and connect using sonycam utility
-      `./exe/sonycam shelf use #{model_name}`
+      `./exe/sonycam shelf select #{model_name}`
       unless load_and_connect
         puts 'ERROR: Test exited because wi-fi connection setup failed!'
         exit! 1
