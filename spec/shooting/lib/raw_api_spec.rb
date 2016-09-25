@@ -36,8 +36,8 @@ module SonyCameraRemoteAPI
       end
       context 'with invalid service type' do
         it 'raises APIVersionInvalid error' do
-          expect { raw_api.search_method(:getShootMode, service: 'avContent') }.to raise_error(ServiceTypeInvalid)
-          expect { raw_api.search_method(:getMethodTypes, service: 'Hoge') }.to raise_error(ServiceTypeInvalid)
+          expect { raw_api.search_method(:getShootMode, service_type: 'avContent') }.to raise_error(ServiceTypeInvalid)
+          expect { raw_api.search_method(:getMethodTypes, service_type: 'Hoge') }.to raise_error(ServiceTypeInvalid)
         end
       end
 
@@ -62,7 +62,7 @@ module SonyCameraRemoteAPI
         end
         context 'with service type' do
           it 'is successfully called' do
-            expect(raw_api.search_method(:getMethodTypes, service: 'avContent')).not_to eq nil
+            expect(raw_api.search_method(:getMethodTypes, service_type: 'avContent')).not_to eq nil
           end
         end
       end
