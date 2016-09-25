@@ -49,8 +49,8 @@ module SonyCameraRemoteAPI
         end
         it 'tries to get supported/available/current values but it can get only current value' do
           result = cam.get_parameter :ExposureMode
-          expect(result[:available]).to match_array []
-          expect(result[:supported]).to match_array []
+          expect(result[:available]).to eq nil
+          expect(result[:supported]).to eq nil
           expect(result[:current]).to eq 'Program Auto'
         end
       end
@@ -76,10 +76,10 @@ module SonyCameraRemoteAPI
           end
         end
         context 'which are unsupported' do
-          it 'gets empty supported/available, nil current value' do
+          it 'gets nil supported/available/current values' do
             result = cam.get_parameter! :CameraHoge
-            expect(result[:available]).to match_array []
-            expect(result[:supported]).to match_array []
+            expect(result[:available]).to eq nil
+            expect(result[:supported]).to eq nil
             expect(result[:current]).to eq nil
           end
         end
@@ -87,10 +87,10 @@ module SonyCameraRemoteAPI
           before do
             cam.set_parameter :CameraFunction, 'Contents Transfer'
           end
-          it 'gets empty supported/available, nil current value after a few seconds' do
+          it 'gets nil supported/available/current values after a few seconds' do
             result = cam.get_parameter! :ShootMode
-            expect(result[:available]).to match_array []
-            expect(result[:supported]).to match_array []
+            expect(result[:available]).to eq nil
+            expect(result[:supported]).to eq nil
             expect(result[:current]).to eq nil
           end
         end
@@ -141,11 +141,11 @@ module SonyCameraRemoteAPI
             end
           end
           context 'with the same value to current' do
-            it 'does not set parameter and return current/old value' do
+            it 'does not set parameter and return current value' do
               result = cam.set_parameter :CameraFunction, 'Remote Shooting'
               expect(result[:current]).to eq 'Remote Shooting'
-              expect(result[:available]).to match_array []
-              expect(result[:old]).to eq 'Remote Shooting'
+              expect(result[:available]).to eq nil
+              expect(result[:old]).to eq nil
             end
           end
         end
@@ -187,8 +187,8 @@ module SonyCameraRemoteAPI
           it 'does not set parameter and return current value' do
             result = cam.set_parameter :ExposureMode, 'Program Auto'
             expect(result[:current]).to eq 'Program Auto'
-            expect(result[:available]).to match_array []
-            expect(result[:old]).to eq 'Program Auto'
+            expect(result[:available]).to eq nil
+            expect(result[:old]).to eq nil
           end
         end
       end
@@ -211,23 +211,23 @@ module SonyCameraRemoteAPI
             end
           end
           context 'with the same value to current' do
-            it 'does not set parameter and return current/old value' do
+            it 'does not set parameter and return current value' do
               result = cam.set_parameter! :CameraFunction, 'Remote Shooting'
               expect(result[:current]).to eq 'Remote Shooting'
-              expect(result[:available]).to match_array []
-              expect(result[:old]).to eq 'Remote Shooting'
+              expect(result[:available]).to eq nil
+              expect(result[:old]).to eq nil
             end
           end
         end
         context 'which are unsupported' do
-          it 'does not set parameter and return empty available, nil current/old values' do
+          it 'does not set parameter and return nil current/availablecurrent/old values' do
             result = cam.set_parameter! :CameraHoge, 'hogehoge'
             expect(result[:current]).to eq nil
-            expect(result[:available]).to match_array []
+            expect(result[:available]).to eq nil
             expect(result[:old]).to eq nil
             result = cam.set_parameter! nil, 'hogehoge'
             expect(result[:current]).to eq nil
-            expect(result[:available]).to match_array []
+            expect(result[:available]).to eq nil
             expect(result[:old]).to eq nil
           end
         end
@@ -235,14 +235,14 @@ module SonyCameraRemoteAPI
           before do
             cam.set_parameter :CameraFunction, 'Contents Transfer'
           end
-          it 'does not set parameter and return empty available, nil current/old values' do
+          it 'does not set parameter and return nil current/availablecurrent/old values' do
             result = cam.set_parameter! :ShootMode, 'still'
             expect(result[:current]).to eq nil
-            expect(result[:available]).to match_array []
+            expect(result[:available]).to eq nil
             expect(result[:old]).to eq nil
             result = cam.set_parameter! :ShootMode, nil
             expect(result[:current]).to eq nil
-            expect(result[:available]).to match_array []
+            expect(result[:available]).to eq nil
             expect(result[:old]).to eq nil
           end
         end
@@ -255,11 +255,11 @@ module SonyCameraRemoteAPI
             result = cam.set_parameter! :ShootMode, 'hogehoge'
             expect(result[:current]).to eq 'still'
             expect(result[:available]).to match_array  shoot_mode
-            expect(result[:old]).to eq 'still'
+            expect(result[:old]).to eq nil
             result = cam.set_parameter! :ShootMode, nil
             expect(result[:current]).to eq 'still'
             expect(result[:available]).to match_array  shoot_mode
-            expect(result[:old]).to eq 'still'
+            expect(result[:old]).to eq nil
           end
         end
       end
@@ -271,8 +271,8 @@ module SonyCameraRemoteAPI
           it 'does not set parameter and return current value' do
             result = cam.set_parameter! :ExposureMode, 'Aperture'
             expect(result[:current]).to eq 'Program Auto'
-            expect(result[:available]).to match_array []
-            expect(result[:old]).to eq 'Program Auto'
+            expect(result[:available]).to eq nil
+            expect(result[:old]).to eq nil
           end
         end
       end

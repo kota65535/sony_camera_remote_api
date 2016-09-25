@@ -109,7 +109,7 @@ module SonyCameraRemoteAPI
         # Show for other parameter
         def show_normal(result)
           array = []
-          if result[:supported].empty?
+          unless result[:supported]
             # If current value is present but NO supported value, it is immutable.
             result[:supported] = [result[:current]]
           end
@@ -128,7 +128,7 @@ module SonyCameraRemoteAPI
         # Show for WhiteBalance parameter
         def show_WhiteBalance(result)
           array = []
-          if result[:supported].empty?
+          unless result[:supported]
             # If current value is present but NO supported value, it is immutable.
             result[:supported] = [result[:current]]
           end
@@ -375,7 +375,7 @@ module SonyCameraRemoteAPI
       option :transfer, type: :boolean, desc: 'Transfer postview image', default: false
       def rapid
         init_camera
-        unless @cam.support_group? :ContShootingMode
+        unless @cam.support? :ContShootingMode
           puts 'This camera does not support continuous shooting mode. Exiting...'
           exit 1
         end

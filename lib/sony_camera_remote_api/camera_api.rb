@@ -71,6 +71,7 @@ module SonyCameraRemoteAPI
     #   * polling = true  : Always use long polling in getEvent call
     #   * polling = false : Never use long polling in getEvent call
     # @raise EventTimeoutError
+    # @todo add example
     def wait_event(timeout: DEFAULT_PARAM_CHANGE_TIMEOUT, polling: nil, &block)
       start_time = Time.now if timeout
       # Long-polling is disabled only at the first call

@@ -37,34 +37,34 @@ module SonyCameraRemoteAPI
       end
     end
 
-    describe '#support? / support_group?' do
+    describe '#support?' do
       it 'returns wether it support the API or API group', DSC_RX100M4: true, ILCE_QX1: true do
         expect(cam.support? :getStorageInformation).to eq true
         expect(cam.support? :getAvailableShootMode).to eq true
-        expect(cam.support_group? :ShootMode).to eq true
+        expect(cam.support? :ShootMode).to eq true
         expect(cam.support? :getSupportedMovieFileFormat).to eq false
-        expect(cam.support_group? :MovieFileFormat).to eq false
+        expect(cam.support? :MovieFileFormat).to eq false
         expect(cam.support? :setWhiteBalance).to be_truthy
-        expect(cam.support_group? :WhiteBalance).to be_truthy
+        expect(cam.support? :WhiteBalance).to be_truthy
       end
     end
     it 'returns wether it support the API or API group', HDR_AZ1: true do
       expect(cam.support? :getStorageInformation).to eq true
       expect(cam.support? :getAvailableShootMode).to eq true
-      expect(cam.support_group? :ShootMode).to eq true
+      expect(cam.support? :ShootMode).to eq true
       expect(cam.support? :getSupportedMovieFileFormat).to eq true
-      expect(cam.support_group? :MovieFileFormat).to eq true
+      expect(cam.support? :MovieFileFormat).to eq true
       expect(cam.support? :setWhiteBalance).to eq false
-      expect(cam.support_group? :WhiteBalance).to eq false
+      expect(cam.support? :WhiteBalance).to eq false
     end
       it 'returns wether it support the API or API group', FDR_X1000V: true do
         expect(cam.support? :getStorageInformation).to eq true
         expect(cam.support? :getAvailableShootMode).to eq true
-        expect(cam.support_group? :ShootMode).to eq true
+        expect(cam.support? :ShootMode).to eq true
         expect(cam.support? :getSupportedMovieFileFormat).to eq true
-        expect(cam.support_group? :MovieFileFormat).to eq true
+        expect(cam.support? :MovieFileFormat).to eq true
         expect(cam.support? :setWhiteBalance).to eq true
-        expect(cam.support_group? :WhiteBalance).to eq true
+        expect(cam.support? :WhiteBalance).to eq true
 
     end
 
