@@ -157,12 +157,12 @@ module SonyCameraRemoteAPI
           end
           version = api_info.versions[0]
         end
-        if opts.key? :service
-          service = opts[:service]
-          if api_info.service_types.include? opts[:service]
-            service = opts[:service]
+        if opts.key? :service_type
+          service = opts[:service_type]
+          if api_info.service_types.include? opts[:service_type]
+            service = opts[:service_type]
           else
-            raise ServiceTypeInvalid, "The service type '#{opts[:service]}' is invalid for method '#{method}'."
+            raise ServiceTypeInvalid, "The service type '#{opts[:service_type]}' is invalid for method '#{method}'."
           end
         else
           # raise error if service type is not given for method having multi service types
