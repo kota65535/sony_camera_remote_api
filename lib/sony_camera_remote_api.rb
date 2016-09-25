@@ -111,15 +111,15 @@ module SonyCameraRemoteAPI
     # @param [String]   dir       Directory where image file is saved. If not given, current directory is used.
     # @return [String, Array<String>, nil]  Filename of the transferred image(s). If 'transfer' is false, returns nil.
     # @example
-    #   # Capture single still image and save it as 'a.jpg' to 'image' directory
-    #   change_function_to_shoot('still', 'Single')
-    #   capture_still
-    #   capture_still(filename: 'a.jpg', dir: 'image')
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   # Capture a single still image, and then save it as images/TEST.JPG.
+    #   cam.change_function_to_shoot 'still', 'Single'
+    #   cam.capture_still filename: 'TEST.JPG', dir: 'images'
     #
-    #   # Capture 10 images by burst shooting mode and save them as 'TEST_0.jpg', ... 'TEST_9.jpg'.
-    #   change_function_to_shoot('still', 'Burst')
-    #   capture_still
-    #   capture_still(prefix: 'TEST')
+    #   # Capture 10 images by burst shooting and save them as 'TEST_0.jpg', ... 'TEST_9.jpg'.
+    #   cam.change_function_to_shoot 'still', 'Burst'
+    #   cam.capture_still prefix: 'TEST'
     def capture_still(transfer: true, filename: nil, prefix: nil, dir: nil)
       wait_event { |r| r[1]['cameraStatus'] == 'IDLE' }
       log.info 'Capturing...'
@@ -151,11 +151,14 @@ module SonyCameraRemoteAPI
     #   * Continuous          : take pictures continuously until stopped.
     #   * Spd Priority Cont.  : take pictures continuously at a rate faster than 'Continuous'.
     # @return [void]
-    # @example Do continuous shooting and transfer:
-    #   change_function_to_shoot('still', 'Continuous')
-    #   start_continuous_shooting
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   # Start continuous shooting and transfer all images.
+    #   cam.change_function_to_shoot('still', 'Continuous')
+    #   cam.start_continuous_shooting
     #   ...
-    #   stop_continuous_shooting(transfer: true)
+    #   cam.stop_continuous_shooting(transfer: true)
     def start_continuous_shooting
       wait_event { |r| r[1]['cameraStatus'] == 'IDLE' }
       startContShooting
@@ -202,11 +205,14 @@ module SonyCameraRemoteAPI
     # To stop recording, call stop_movie_recording method.
     # @note You have to set shooting mode to 'movie' before calling this method.
     # @return [void]
-    # @example Record movie and transfer:
-    #   change_function_to_shoot('movie')
-    #   start_movie_recording
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   # Record movie and transfer it.
+    #   cam.change_function_to_shoot('movie')
+    #   cam.start_movie_recording
     #   ...
-    #   stop_movie_recording(transfer: true)
+    #   cam.stop_movie_recording(transfer: true)
     def start_movie_recording
       wait_event { |r| r[1]['cameraStatus'] == 'IDLE' }
       startMovieRec
@@ -235,11 +241,14 @@ module SonyCameraRemoteAPI
     # To stop recording, call stop_interval_recording method.
     # @note You have to set shooting mode to 'intervalstill' before calling this method.
     # @return [void]
-    # @example Do interval still recording:
-    #   change_function_to_shoot('intervalstill')
-    #   start_interval_recording
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   # Start interval still recording (does not transfer).
+    #   cam.change_function_to_shoot('intervalstill')
+    #   cam.start_interval_recording
     #   ...
-    #   stop_interval_recording(transfer: true)
+    #   cam.stop_interval_recording
     def start_interval_recording
       wait_event { |r| r[1]['cameraStatus'] == 'IDLE' }
       startIntervalStillRec
@@ -269,11 +278,14 @@ module SonyCameraRemoteAPI
     # To stop recording, call stop_loop_recording method.
     # @note You have to set shooting mode to 'looprec' before calling this method.
     # @return [void]
-    # @example Typical usage:
-    #   change_function_to_shoot('looprec')
-    #   start_loop_recording
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   # Start loop movie recording (does not transfer).
+    #   cam.change_function_to_shoot('looprec')
+    #   cam.start_loop_recording
     #   ...
-    #   stop_loop_recording(transfer: true)
+    #   cam.stop_loop_recording
     def start_loop_recording
       wait_event { |r| r[1]['cameraStatus'] == 'IDLE' }
       startLoopRec
@@ -305,9 +317,11 @@ module SonyCameraRemoteAPI
     # @param [Fixnum] relative    Relative percecntage to current position of the lense.
     # @return [Array<Fixnum>]     Array of initial zoom position and current zoom position.
     # @example
-    #   act_zoom(absolute: 0)     # zoom out to the wide-end
-    #   act_zoom(absolute: 100)   # zoom in to the tele-end
-    #   act_zoom(relative: -50)   # zoom out by -50 from the current position
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.act_zoom(absolute: 0)     # zoom out to the wide-end
+    #   cam.act_zoom(absolute: 100)   # zoom in to the tele-end
+    #   cam.act_zoom(relative: -50)   # zoom out by -50 from the current position
     def act_zoom(absolute: nil, relative: nil)
       # Check arguments
       return if [relative, absolute].none?
@@ -501,8 +515,8 @@ module SonyCameraRemoteAPI
     # Starts a new thread that downloads streamed liveview images.
     # This liveview thread continues downloading unless the one of the following conditions meets:
     # The both hook method is called called each time after a liveview image or frame is downloaded.
-    # @param [String] size      The liveview size.
-    # @param [Fixnum] time      Time in seconds until finishing liveview streaming.
+    # @param [String] size  The liveview size.
+    # @param [Fixnum] time  Time in seconds until finishing liveview streaming.
     # @yield [LiveviewImage, LiveviewFrameInformation] The block called every time a liveview image is downloaded.
     # @yieldparam [LiveviewImage] liveview image of each frame.
     # @yieldparam [LiveviewFrameInformation] liveview frame information of each frame.
@@ -610,15 +624,27 @@ module SonyCameraRemoteAPI
     #   Unlike the one of request parameter of getContentList API, you can specify over 100.
     # @return [Array<Hash>]   Content informations
     # @see getContentList API in the API reference.
-    # @example Typical usage:
-    #   change_function_to_transfer
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_transfer
     #
-    #   # Get all contents in the storage
-    #   get_content_list
-    #   # Get still contents captured on 2016/8/1
-    #   get_content_list(type: 'still', date: '20160801')
-    #   # Get 3 oldest XAVC-S movie contents
-    #   get_content_list(type: 'movie_xavcs', sort: 'ascending', count: 3)
+    #   # Get all contents
+    #   contents = cam.get_content_list
+    #   # Get still contents created on 2016/8/1
+    #   contents = cam.get_content_list(type: 'still', date: '20160801')
+    #   # Get 3 oldest movie contents
+    #   contents = cam.get_content_list(type: ['movie_xavcs', 'movie_mp4'], sort: 'ascending', count: 3)
+    #
+    #   # Get filenames and URL of each content
+    #   contents.each |c| do
+    #     filename = c['content']['original'][0]['fileName']
+    #     url = c['content']['original'][0]['url']
+    #     puts "#{filename}, #{url}"
+    #   end
+    #
+    #   # Transfer contents
+    #   transfer_contents(contents)
     def get_content_list(type: nil, date: nil, sort: 'descending', count: nil)
       type = Array(type) if type.is_a? String
 
@@ -670,14 +696,26 @@ module SonyCameraRemoteAPI
     # @param [Fixnum] date_count            Number of dates to get.
     # @param [Fixnum] content_count         Number of contents to get
     # @return [Array< Array<String, Fixnum> >]  Array of pairs of a date in format of 'YYYYMMDD' and a number of contents of the date.
-    # @example Typical usage:
-    #   change_function_to_transfer
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_transfer
+    #
     #   # Get all dates and the number of contents of the date
-    #   get_date_list
-    #   # Get 5 newest dates that contains at least one MP4 and XAVC-S movie content.
-    #   get_date_list(type: ['movie_mp4','movie_xavcs'], date_count: 5)
+    #   dates = cam.get_date_list
+    #   # Get 5 newest dates that contains at least one XAVC-S movie content.
+    #   dates = cam.get_date_list(type: 'movie_xavcs', date_count: 5)
     #   # Get all dates that contains at least 10 still contents.
-    #   get_date_list(type: 'still', content_count: 10)
+    #   dates = cam.get_date_list(type: 'still', content_count: 10)
+    #
+    #   dates.each do |date, count|
+    #     # Get date and its content count
+    #     puts "#{date['title']}, #{count}"
+    #     # Get contents of each date
+    #     contents = cam.get_content_list date: date['title']
+    #     # Transfer contents
+    #     cam.transfer_contents contents
+    #   end
     def get_date_list(type: nil, sort: 'descending', date_count: nil, content_count: nil)
       type = Array(type) if type.is_a? String
 
@@ -714,10 +752,9 @@ module SonyCameraRemoteAPI
     # @param [Array<Hash>] contents     Array of content information, which can be obtained by get_content_list
     # @param [Array<String>] filenames  Array of filename strings
     # @param [String] size              Content size. available values are 'original', 'large', 'small', 'thumbnail'.
-    # @example Typical usage:
-    #   change_function_to_transfer
-    #   contents = get_content_list(type: 'still', count: 10)     # get 10 newest still contents
-    #   transfer_contents(contents)                             # transfer them
+    # @see get_content_list
+    # @see get_date_list
+    # @todo If 'contents' is directory (date), get all contents of the directory.
     def transfer_contents(contents, filenames=[], dir: nil, size: 'original')
       if SIZE_LIST.exclude?(size)
         log.error "#{size} is invalid for size option!"
@@ -767,10 +804,14 @@ module SonyCameraRemoteAPI
     # Delete content(s) of camera storage.
     # @note You have to set camera function to 'Contents Transfer' before calling this method.
     # @param [Array<Hash>] contents array of content hashes, which can be obtained by get_content_list
-    # @example Typical usage:
-    #   change_function_to_transfer
-    #   contents = get_content_list(type: still, count: 10)     # get 10 newest still contents
-    #   delete_contents(contents)                               # delete them
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_transfer
+    #
+    #   # Delete 10 newest still contents
+    #   contents = cam.get_content_list(type: still, count: 10)
+    #   delete_contents(contents)
     def delete_contents(contents)
       contents = [contents].compact unless contents.is_a? Array
       count = contents.size
