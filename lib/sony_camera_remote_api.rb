@@ -26,7 +26,7 @@ module SonyCameraRemoteAPI
                                   :get_parameter, :get_parameter!,
                                   :set_parameter, :set_parameter!,
                                   :get_current, :get_current!,
-                                  :support?, :parameters
+                                  :support?, :parameters, :apis
 
     attr_reader :endpoints
 
