@@ -4,6 +4,7 @@ require 'sony_camera_remote_api/ssdp'
 require 'sony_camera_remote_api/utils'
 require 'sony_camera_remote_api/camera_api'
 require 'sony_camera_remote_api/packet'
+require 'sony_camera_remote_api/shelf'
 require 'core_ext/hash_patch'
 require 'httpclient'
 require 'active_support'
@@ -522,6 +523,18 @@ module SonyCameraRemoteAPI
     # @yieldparam [LiveviewFrameInformation] liveview frame information of each frame.
     #   If liveview frame information is not supported, nil is always given.
     # @return [Thread] liveview downloading thread object
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_shoot 'still', 'Single'
+    #
+    #   # Start liveview streaming
+    #   th = cam.start_liveview_thread do |img|
+    #     filename = "liveview/#{img.sequence_number}.jpg"
+    #     File.write filename, img.jpeg_data
+    #     puts "wrote #{filename}."
+    #   end
+    #   th.join
     def start_liveview_thread(size: nil, time: nil)
       liveview_url, frame_info_enabled = init_liveview size: size
       log.debug "liveview URL: #{liveview_url}"
@@ -637,14 +650,14 @@ module SonyCameraRemoteAPI
     #   contents = cam.get_content_list(type: ['movie_xavcs', 'movie_mp4'], sort: 'ascending', count: 3)
     #
     #   # Get filenames and URL of each content
-    #   contents.each |c| do
+    #   contents.each do |c|
     #     filename = c['content']['original'][0]['fileName']
     #     url = c['content']['original'][0]['url']
     #     puts "#{filename}, #{url}"
     #   end
     #
     #   # Transfer contents
-    #   transfer_contents(contents)
+    #   cam.transfer_contents(contents)
     def get_content_list(type: nil, date: nil, sort: 'descending', count: nil)
       type = Array(type) if type.is_a? String
 
@@ -810,8 +823,8 @@ module SonyCameraRemoteAPI
     #   cam.change_function_to_transfer
     #
     #   # Delete 10 newest still contents
-    #   contents = cam.get_content_list(type: still, count: 10)
-    #   delete_contents(contents)
+    #   contents = cam.get_content_list(type: 'still', count: 10)
+    #   cam.delete_contents(contents)
     def delete_contents(contents)
       contents = [contents].compact unless contents.is_a? Array
       count = contents.size

@@ -1,13 +1,18 @@
+# Hash extension for handling API response.
 class Hash
-  # Get result element of API response.
+  # Get result element.
   def result
     self['result']
   end
-  # Get id element of API response.
+  # Get results element.
+  def results
+    self['results']
+  end
+  # Get id element.
   def id
     self['id']
   end
-  # Get error element of API response.
+  # Get error element.
   def error
     self['error']
   end

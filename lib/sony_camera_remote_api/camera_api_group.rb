@@ -130,30 +130,56 @@ module SonyCameraRemoteAPI
     end
 
 
-    # Get current value of a camera parameter.
+    # Get current value of the camera parameter.
     # @param [Symbol] group_name Parameter name
-    # @return [Object] current value
-    # @raise APINotSupported, APINotAvailable, IllegalArgument
+    # @return [Object] Current value
+    # @raise APIForbidden, APINotSupported, APINotAvailable, IllegalArgument
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_shoot 'still', 'Single'
+    #
+    #   value = cam.get_current :ContShootingMode
+    #   puts value      #=> 'Burst', 'MotionShot', Continuous' ...
     def get_current(group_name, **opts)
       get_parameter(group_name, available: false, supported: false, **opts)[:current]
     end
 
 
-    # Almost same as get_current, but this method does not raise Exception
-    # even if the parameter is not supported, available or its arguments illegal.
-    # @param [Symbol] group_name Parameter name
-    # @return [Object] current value
+    # Almost same as get_current, but this method does not raise Exception.
+    # @return [Object, nil] Current value or nil if any error occurred.
+    # @see get_current
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_shoot 'still', 'Single'
+    #
+    #   value = cam.get_current! :ContShootingMode
+    #   if value
+    #     puts "ContShootingMode is supported, and current value is #{value}"
+    #   else
+    #     puts 'ContShootingMode is not supported.'
+    #   end
     def get_current!(group_name, **opts)
       get_parameter!(group_name, available: false, supported: false, **opts)[:current]
     end
 
 
-    # Get supported/available/current value of a camera parameter.
+    # Get supported/available/current value of the camera parameter.
     # @param [Symbol] group_name Parameter name
     # @param [Boolean] available Flag to get available values
     # @param [Boolean] supported Flag to get supported values
     # @return [Hash]  current/available/supported values
-    # @raise APINotSupported, APINotAvailable, IllegalArgument
+    # @raise APIForbidden, APINotSupported, APINotAvailable, IllegalArgument
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_shoot 'movie'
+    #
+    #   result = cam.get_parameter :ExposureMode
+    #   puts "current value   : #{result[:current]}"
+    #   puts "available values: #{result[:available]}"
+    #   puts "supported values: #{result[:supported]}"
     def get_parameter(group_name, available: true, supported: true, **opts)
       result = { current: nil, available: [], supported: [] }
       begin
@@ -178,8 +204,25 @@ module SonyCameraRemoteAPI
     end
 
 
-    # Almost same as get_parameter, but this method does not raise Exception
-    # even if the parameter is not supported, available or its arguments illegal.
+    # Almost same as get_parameter, but this method does not raise Exception.
+    # @return [Hash] current/available/supported values. If any error occurs, the value that cannot get become nil or empty array.
+    # @see get_parameter
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_shoot 'still', 'Single'
+    #
+    #   result = cam.get_parameter! :ExposureMode
+    #   if result[:current]
+    #     puts 'ExposureMode is supported.'
+    #     if result[:available] && result[:supported]
+    #       puts 'And you can change the value by #set_parameter.'
+    #     else
+    #       puts 'And you can change the value by the hardware dial or switch (NOT by #set_parameter).'
+    #     end
+    #   else
+    #     puts 'ExposureMode is not supported!'
+    #   end
     def get_parameter!(group_name, **opts)
       get_parameter(group_name, **opts)
     rescue APIForbidden, APINotSupported, APINotAvailable, IllegalArgument => e
@@ -190,11 +233,20 @@ module SonyCameraRemoteAPI
     end
 
 
-    # Set a camera parameter to the given value.
+    # Set the camera parameter to the given value.
     # @param [Symbol] group_name Parameter name
     # @param [Object] value New value to be set
-    # @return [Hash]  current/available/old values
-    # @raise APINotSupported, APINotAvailable, IllegalArgument
+    # @return [Hash]  current/available/old values after setting parameter.
+    # @raise APIForbidden, APINotSupported, APINotAvailable, IllegalArgument
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_shoot 'still', 'Single'
+    #
+    #   result = cam.set_parameter :FlashMode, 'on'
+    #   puts "current value   : #{result[:current]}"
+    #   puts "available values: #{result[:available]}"
+    #   puts "old value       : #{result[:old]}"
     def set_parameter(group_name, value, *args, **opts)
       result = { current: nil, available: [], old: nil }
       begin
@@ -229,8 +281,26 @@ module SonyCameraRemoteAPI
     end
 
 
-    # Almost same as set_parameter, but this method does not raise Exception
-    # even if the parameter is not supported, available or its arguments illegal.
+    # Almost same as set_parameter, but this method does not raise Exception.
+    # @return [Hash] current/available/old values after setting parameter.
+    #   If any error occurs, the value that cannot get become nil or empty array.
+    # @see set_parameter
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_shoot 'still', 'Single'
+    #
+    #   result = cam.set_parameter! :FlashMode, 'on'
+    #   if result[:current]
+    #     puts 'FlashMode is supported.'
+    #     if result[:current] == 'on'
+    #       puts "And successfully set the value to '#{result[:current]}'."
+    #     else
+    #       puts 'But cannot set the value.'
+    #     end
+    #   else
+    #     puts 'FlashMode is not supported!'
+    #   end
     def set_parameter!(group_name, value, **opts)
       set_parameter(group_name, value, **opts)
     rescue APIForbidden, APINotSupported, APINotAvailable, IllegalArgument => e
@@ -238,6 +308,13 @@ module SonyCameraRemoteAPI
       e.object
     rescue HTTPClient::BadResponseError => e
       log.error e.message
+    end
+
+
+    # Get an array of supported camera parameters.
+    # @return [Array<String>] supported camera parameters
+    def parameters
+      @api_groups.keys
     end
 
 

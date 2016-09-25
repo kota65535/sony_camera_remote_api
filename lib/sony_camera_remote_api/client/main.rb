@@ -11,12 +11,13 @@ require 'time'
 require 'pp'
 
 module SonyCameraRemoteAPI
-  # CLI client module
+  # sonycam client module
   module Client
 
     # Default config file saved in home directory.
     GLOBAL_CONFIG_FILE = File.expand_path('~/.sonycamconf')
 
+    # Main class of client
     class Main < Thor
       include Utils
       include Scripts

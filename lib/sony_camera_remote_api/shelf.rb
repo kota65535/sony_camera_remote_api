@@ -4,6 +4,7 @@ require 'yaml'
 
 
 module SonyCameraRemoteAPI
+  # Class for handling multiple camera's connection configurations.
   class Shelf
     include Utils
 

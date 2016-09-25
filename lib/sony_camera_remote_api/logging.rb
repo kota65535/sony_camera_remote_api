@@ -39,6 +39,8 @@ module Logging
     Logging.log_file self.class.name, log_file
   end
 
+  # Set log level.
+  # @param [Fixnum] level Log level for Logger object.
   def set_level(level)
     @@level = level
   end

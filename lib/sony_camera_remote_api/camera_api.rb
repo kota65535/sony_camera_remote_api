@@ -14,11 +14,11 @@ module SonyCameraRemoteAPI
     # Default timeout for waiting camera parameter changes
     DEFAULT_PARAM_CHANGE_TIMEOUT = 15
 
-    def_delegators :@raw_api_manager, :apis, :support?
     def_delegators :@api_group_manager, :get_parameter, :get_parameter!,
                                         :set_parameter, :set_parameter!,
                                         :get_current, :get_current!
-    def_delegator :@api_group_manager, :support_group?
+    def_delegators :@raw_api_manager, :apis
+
 
 
     # Create CameraAPIManager object.
@@ -28,28 +28,6 @@ module SonyCameraRemoteAPI
       @raw_api_manager = RawAPIManager.new endpoints
       @api_group_manager = CameraAPIGroupManager.new self
       @reconnect_by = reconnect_by
-    end
-
-
-    # Call camera APIs with checking if it is available by 'getAvailableApiList'.
-    # If not available, wait a minute until the called API turns to be available.
-    # @param [String] service_type
-    # @param [String] method
-    # @param [Array,String] params
-    # @param [Fixnum] id
-    # @param [String] version
-    # @param [Fixnum] timeout Timeout in seconds for waiting until the API is available
-    def call_api_safe(service_type, method, params, id, version, timeout = DEFAULT_API_CALL_TIMEOUT, **args)
-      unless getAvailableApiList['result'][0].include? method
-        log.error "Method '#{method}' is not available now! waiting..."
-        begin
-          wait_event(timeout: timeout) { |res| res[0]['names'].include? method }
-        rescue EventTimeoutError => e
-          raise APINotAvailable.new, "Method '#{method}' is not available now!"
-        end
-        log.info "Method '#{method}' has become available."
-      end
-      @raw_api_manager.call_api(service_type, method, params, id, version)
     end
 
 
@@ -117,13 +95,33 @@ module SonyCameraRemoteAPI
 
 
     # Ghost method, which handles almost API calls.
-    # If Camera API (servie type == camera) is called, call_api_safe() is used.
+    # You can call an API as a method with the same name.
+    # We don't have to specify service_type and version for almost APIs.
+    # But some APIs have multiple service types and versions, so that we have to specify one service type or version.
+    # When '!' is appended to the end of the method name, it does not raise Exception even if any error occurred.
     # @param [String] method
     # @param [Array,String] params
     # @param [String] service_type
     # @param [Fixnum] id
     # @param [String] version
     # @param [Fixnum] timeout   Timeout in seconds for waiting until the API is available
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_shoot 'still', 'Single'
+    #
+    #   # Call getMethodTypes API with parameter: ['1.0'], service type: 'camera' and id: 1.
+    #   response = cam.getMethodTypes ['1.0'], service_type: 'camera', id: 1
+    #   puts response.id
+    #   response.results.each do |r|
+    #     puts '----'
+    #     puts r
+    #   end
+    #
+    #   # Call setCurrentTime API if supported.
+    #   cam.setCurrentTime! [{'dateTime' => Time.now.utc.iso8601,
+    #                       'timeZoneOffsetMinute' => 540,
+    #                       'dstOffsetMinute' => 0}]
     def method_missing(method, params = [], *args, **opts)
       ignore_error = true if method.to_s.end_with? '!'
       method = method.to_s.delete('!').to_sym
@@ -141,7 +139,7 @@ module SonyCameraRemoteAPI
           else
             response = @raw_api_manager.call_api(service, name, params, id, version)
           end
-        rescue APINotSupported, APINotAvailable, IllegalArgument, HTTPClient::BadResponseError => e
+        rescue APIForbidden, APINotSupported, APINotAvailable, IllegalArgument, HTTPClient::BadResponseError => e
           if ignore_error
             return nil
           else
@@ -153,7 +151,46 @@ module SonyCameraRemoteAPI
     end
 
 
+    # Get whether the API or API group is supported by a camera.
+    # @param [Symbol] api_or_group_name The API or API group name
+    # @return [Boolean] +true+ if supported, +false+ otherwise.
+    # @example
+    #   # Initialize
+    #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_shoot 'still', 'Single'
+    #
+    #   # Check if actZoom API is supported.
+    #   puts cam.support? :actZoom
+    #   # Check if ZoomSetting API group is supported.
+    #   puts cam.support? :ZoomSetting
+    def support?(api_or_group_name)
+      @raw_api_manager.support?(api_or_group_name) || @api_group_manager.support_group?(api_or_group_name)
+    end
+
+
     private
+
+    # Call camera APIs with checking if it is available by 'getAvailableApiList'.
+    # If not available, wait a minute until the called API turns to be available.
+    # @param [String] service_type
+    # @param [String] method
+    # @param [Array,String] params
+    # @param [Fixnum] id
+    # @param [String] version
+    # @param [Fixnum] timeout Timeout in seconds for waiting until the API is available
+    def call_api_safe(service_type, method, params, id, version, timeout = DEFAULT_API_CALL_TIMEOUT, **args)
+      unless getAvailableApiList['result'][0].include? method
+        log.error "Method '#{method}' is not available now! waiting..."
+        begin
+          wait_event(timeout: timeout) { |res| res[0]['names'].include? method }
+        rescue EventTimeoutError => e
+          raise APINotAvailable.new, "Method '#{method}' is not available now!"
+        end
+        log.info "Method '#{method}' has become available."
+      end
+      @raw_api_manager.call_api(service_type, method, params, id, version)
+    end
+
 
     # Call getEvent without polling if getEvent with polling failed.
     def get_event_both(poll, timeout: nil)
@@ -194,6 +231,5 @@ module SonyCameraRemoteAPI
       retry_count += 1
       retry
     end
-
   end
 end
