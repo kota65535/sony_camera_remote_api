@@ -33,7 +33,7 @@ module SonyCameraRemoteAPI
 
 
     # getEvent API.
-    # Long polling flag is set true as default.
+    # Long polling flag is set +true+ as default.
     # @param [Array,String] params
     # @return [Hash]  Response of API
     def getEvent(params = [true], **opts)
@@ -64,12 +64,12 @@ module SonyCameraRemoteAPI
     # Wait until 'getEvent' result response meets the specified condition.
     # This method can be used to wait after calling APIs that change any camera parameters, such as 'setCameraFunction'.
     # @yield [Array<Hash>] The block that returns +true+ or +false+ based on the condition of the response of getEvent
-    # @yieldparam [Array<Hash>] 'result' element in the response of getEvent
+    # @yieldparam [Array<Hash>] result the +result+ element in the response of +getEvent+
     # @param [Fixnum] timeout   Timeout in seconds for changing parameter
-    # @param [Boolean] polling  This method has 3 patterns to handle long polling flag by 'polling' parameter.
+    # @param [Boolean] polling  This method has 3 patterns to handle long polling flag by +polling+ argument.
     #   * default : The first getEvent call doesn't use long polling, but then later always use long polling.
-    #   * polling = true  : Always use long polling in getEvent call
-    #   * polling = false : Never use long polling in getEvent call
+    #   * polling = +true+  : Always use long polling in getEvent call
+    #   * polling = +false+ : Never use long polling in getEvent call
     # @raise EventTimeoutError
     # @todo add example
     def wait_event(timeout: DEFAULT_PARAM_CHANGE_TIMEOUT, polling: nil, &block)
@@ -98,14 +98,15 @@ module SonyCameraRemoteAPI
 
     # Ghost method, which handles almost API calls.
     # You can call an API as a method with the same name.
-    # We don't have to specify service_type and version for almost APIs.
-    # But some APIs have multiple service types and versions, so that we have to specify one service type or version.
-    # When '!' is appended to the end of the method name, it does not raise Exception even if any error occurred.
+    # We don't have to specify service_type and version for almost APIs except some APIs
+    # having multiple service types and versions.
+    #
+    # When +!+ is appended to the end of the method name, it does not raise exception even if any error occurred.
     # @param [String] method
-    # @param [Array,String] params
-    # @param [String] service_type
-    # @param [Fixnum] id
-    # @param [String] version
+    # @param [Array,String] params  'params' element of the request
+    # @param [String] service_type  Service type of the API
+    # @param [Fixnum] id        ID for the request/response pair
+    # @param [String] version   Version of the API
     # @param [Fixnum] timeout   Timeout in seconds for waiting until the API is available
     # @example
     #   # Initialize
@@ -120,7 +121,7 @@ module SonyCameraRemoteAPI
     #     puts r
     #   end
     #
-    #   # Call setCurrentTime API if supported.
+    #   # Call setCurrentTime API if supported (does not raise exception if not supported)
     #   cam.setCurrentTime! [{'dateTime' => Time.now.utc.iso8601,
     #                       'timeZoneOffsetMinute' => 540,
     #                       'dstOffsetMinute' => 0}]

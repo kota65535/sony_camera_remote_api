@@ -38,9 +38,9 @@ module SonyCameraRemoteAPI
 
     # Creates a new Camera object.
     # @note It is good idea to save endpoint URLs by each cameras somewhere to omit SSDP search.
-    # @param [Hash] endpoints     Endpoint URLs. if not given, SSDP search is executed.
-    # @param [Proc] reconnect_by  Hook method called when Wi-Fi is disconnected.
-    # @param [String, IO, Array<String, IO>] log_file   file name or stream to output log.
+    # @param [Hash] endpoints     Endpoint URLs. If not given, SSDP search is executed to get them.
+    # @param [Proc] reconnect_by  Hook method to reconnect to the camera, which is called when Wi-Fi is disconnected.
+    # @param [String, IO, Array<String, IO>] log_file File name or stream to output log.
     # @param [Boolean] finalize   If true, stopRecMode API is called in the destructor.
     #   As far as I know, we don't have any trouble even if we never call stopRecMode.
     def initialize(endpoints: nil, reconnect_by: nil, log_file: $stdout, log_level: Logger::INFO, finalize: false)
@@ -62,7 +62,8 @@ module SonyCameraRemoteAPI
       end
     end
 
-    # Destructor
+
+    # Destructor: this calls stopRecMode API to finish shooting.
     def self.finalize(this)
       proc do
         this.stopRecMode!
@@ -73,10 +74,11 @@ module SonyCameraRemoteAPI
 
     # Change camera function to 'Remote Shooting' and then set shooting mode.
     # @param [String] mode  Shoot mode
-    # @param [String] cont  Continous shooting mode (only available when shoot mode is 'still')
+    # @param [String] cont  Continuous shooting mode (only available when shoot mode is 'still')
     # @return [void]
     # @see 'Shoot mode parameters' in API reference
     # @see 'Continuous shooting mode parameter' in API reference
+    # @todo make mode argument nullable
     def change_function_to_shoot(mode, cont = nil)
       # cameras that does not support CameraFunction API group has only 'Remote Shooting' function
       set_parameter! :CameraFunction, 'Remote Shooting'
@@ -107,14 +109,15 @@ module SonyCameraRemoteAPI
     #   * MotionShot : take 10 pictures and render the movement into a single picture
     # @param [Boolean]  transfer  Flag to transfer the postview image.
     # @param [String]   filename  Name of image file to be transferred. If not given, original name is used.
-    #    Only available in Single/MotionShot shooting mode.
-    # @param [String]   prefix    Prefix of sequencial image files to be transferred. If not given, original name is used.
-    #    Only available in Burst shooting mode.
+    #   Only available in Single/MotionShot shooting mode.
+    # @param [String]   prefix    Prefix of sequential image files to be transferred. If not given, original name is used.
+    #   Only available in Burst shooting mode.
     # @param [String]   dir       Directory where image file is saved. If not given, current directory is used.
     # @return [String, Array<String>, nil]  Filename of the transferred image(s). If 'transfer' is false, returns nil.
     # @example
     #   # Initialize
     #   cam = SonyCameraRemoteAPI::Camera.new
+    #
     #   # Capture a single still image, and then save it as images/TEST.JPG.
     #   cam.change_function_to_shoot 'still', 'Single'
     #   cam.capture_still filename: 'TEST.JPG', dir: 'images'
@@ -156,10 +159,11 @@ module SonyCameraRemoteAPI
     # @example
     #   # Initialize
     #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_shoot 'still', 'Continuous'
+    #
     #   # Start continuous shooting and transfer all images.
-    #   cam.change_function_to_shoot('still', 'Continuous')
     #   cam.start_continuous_shooting
-    #   ...
+    #   sleep 5
     #   cam.stop_continuous_shooting(transfer: true)
     def start_continuous_shooting
       wait_event { |r| r[1]['cameraStatus'] == 'IDLE' }
@@ -210,10 +214,11 @@ module SonyCameraRemoteAPI
     # @example
     #   # Initialize
     #   cam = SonyCameraRemoteAPI::Camera.new
-    #   # Record movie and transfer it.
     #   cam.change_function_to_shoot('movie')
+    #
+    #   # Record movie and transfer it.
     #   cam.start_movie_recording
-    #   ...
+    #   sleep 5
     #   cam.stop_movie_recording(transfer: true)
     def start_movie_recording
       wait_event { |r| r[1]['cameraStatus'] == 'IDLE' }
@@ -246,10 +251,11 @@ module SonyCameraRemoteAPI
     # @example
     #   # Initialize
     #   cam = SonyCameraRemoteAPI::Camera.new
-    #   # Start interval still recording (does not transfer).
     #   cam.change_function_to_shoot('intervalstill')
+    #
+    #   # Start interval still recording (does not transfer).
     #   cam.start_interval_recording
-    #   ...
+    #   sleep 5
     #   cam.stop_interval_recording
     def start_interval_recording
       wait_event { |r| r[1]['cameraStatus'] == 'IDLE' }
@@ -283,10 +289,11 @@ module SonyCameraRemoteAPI
     # @example
     #   # Initialize
     #   cam = SonyCameraRemoteAPI::Camera.new
-    #   # Start loop movie recording (does not transfer).
     #   cam.change_function_to_shoot('looprec')
+    #
+    #   # Start loop movie recording (does not transfer).
     #   cam.start_loop_recording
-    #   ...
+    #   sleep 5
     #   cam.stop_loop_recording
     def start_loop_recording
       wait_event { |r| r[1]['cameraStatus'] == 'IDLE' }
@@ -312,7 +319,7 @@ module SonyCameraRemoteAPI
     end
 
 
-    # Act zoom.
+    # Do zoom.
     # Zoom position can be specified by relative and absolute percentage within the range of 0-100.
     # If Both option are specified, absolute position is preceded.
     # @param [Fixnum] absolute    Absolute position of the lense. 0 is the Wide-end and 100 is the Tele-end.
@@ -321,6 +328,7 @@ module SonyCameraRemoteAPI
     # @example
     #   # Initialize
     #   cam = SonyCameraRemoteAPI::Camera.new
+    #
     #   cam.act_zoom(absolute: 0)     # zoom out to the wide-end
     #   cam.act_zoom(absolute: 100)   # zoom in to the tele-end
     #   cam.act_zoom(relative: -50)   # zoom out by -50 from the current position
@@ -363,13 +371,14 @@ module SonyCameraRemoteAPI
 
 
     # Do focus, which is the same as half-pressing the shutter button.
+    # @note You have to set shooting mode to 'still' before calling this method.
     # @return [Boolean] +true+ if focus succeeded, +false+ if failed.
     # @example
     #   # Initialize
     #   cam = SonyCameraRemoteAPI::Camera.new
-    #   # Focus function is available only 'still' shoot mode
     #   cam.change_function_to_shoot 'still'
-    #   # Capture forever only when focus succeeded.
+    #
+    #   # Capture forever only when succeeded to focus.
     #   loop do
     #     if cam.act_focus
     #       cam.capture_still
@@ -393,8 +402,9 @@ module SonyCameraRemoteAPI
 
 
     # Do touch focus, by which we can specify the focus position.
-    # @note Tracking focus and Touch focus is exclusive function.
-    #   Tracking focus is disabled automatically by calling this method.
+    # @note You have to set shooting mode to 'still' before calling this method.
+    # @note Tracking focus and Touch focus are exclusive functions.
+    #   So tracking focus is automatically disabled by calling this method.
     # @param [Fixnum] x   Percentage of X-axis position.
     # @param [Fixnum] y   Percentage of Y-axis position.
     # @return [Boolean]   AFType ('Touch' or 'Wide') if focus succeeded. nil if failed.
@@ -402,6 +412,8 @@ module SonyCameraRemoteAPI
     # @example
     #   # Initialize
     #   cam = SonyCameraRemoteAPI::Camera.new
+    #   cam.change_function_to_shoot 'still'
+    #
     #   # Try to focus on upper-middle position.
     #   if cam.act_touch_focus(50, 10)
     #     cam.capture_still
@@ -427,6 +439,7 @@ module SonyCameraRemoteAPI
 
     # Do tracking focus, by which the focus position automatically track the object.
     # The focus position is expressed by percentage to the origin of coordinates, which is upper left of liveview images.
+    # @note You have to set shooting mode to 'still' before calling this method.
     # @param [Fixnum] x   Percentage of X-axis position.
     # @param [Fixnum] y   Percentage of Y-axis position.
     # @return [Boolean] +true+ if focus succeeded, +false+ if failed.
@@ -434,6 +447,7 @@ module SonyCameraRemoteAPI
     #   # Initialize
     #   cam = SonyCameraRemoteAPI::Camera.new
     #   cam.change_function_to_shoot 'still'
+    #
     #   # Start tracking focus from the center position
     #   if cam.act_tracking_focus(50, 50)
     #     th = cam.start_liveview_thread do |img, info|
@@ -489,7 +503,8 @@ module SonyCameraRemoteAPI
     # @example
     #   # Initialize
     #   cam = SonyCameraRemoteAPI::Camera.new
-    #   cam.change_function_to_shoot 'still', 'Single'
+    #   cam.change_function_to_shoot 'still'
+    #
     #   # Try to focus on upper-middle position.
     #   if cam.act_tracking_focus(50, 10)
     #     puts cam.focused?

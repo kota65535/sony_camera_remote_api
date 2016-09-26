@@ -137,10 +137,10 @@ module SonyCameraRemoteAPI
     # @example
     #   # Initialize
     #   cam = SonyCameraRemoteAPI::Camera.new
-    #   cam.change_function_to_shoot 'still', 'Single'
+    #   cam.change_function_to_shoot 'still', 'Continuous'
     #
     #   value = cam.get_current :ContShootingMode
-    #   puts value      #=> 'Burst', 'MotionShot', Continuous' ...
+    #   puts value      #=> Continuous
     def get_current(group_name, **opts)
       get_parameter(group_name, available: false, supported: false, **opts)[:current]
     end
@@ -152,7 +152,7 @@ module SonyCameraRemoteAPI
     # @example
     #   # Initialize
     #   cam = SonyCameraRemoteAPI::Camera.new
-    #   cam.change_function_to_shoot 'still', 'Single'
+    #   cam.change_function_to_shoot 'still', 'Continuous'
     #
     #   value = cam.get_current! :ContShootingMode
     #   if value
@@ -167,8 +167,8 @@ module SonyCameraRemoteAPI
 
     # Get supported/available/current value of the camera parameter.
     # @param [Symbol] group_name Parameter name
-    # @param [Boolean] available Flag to get available values
-    # @param [Boolean] supported Flag to get supported values
+    # @param [Boolean] available If +true+, available values are included to the returned hash.
+    # @param [Boolean] supported If +true+, supported values are returned to the returned hash.
     # @return [Hash]  current/available/supported values
     # @raise APIForbidden, APINotSupported, APINotAvailable, IllegalArgument
     # @example
@@ -210,7 +210,7 @@ module SonyCameraRemoteAPI
     # @example
     #   # Initialize
     #   cam = SonyCameraRemoteAPI::Camera.new
-    #   cam.change_function_to_shoot 'still', 'Single'
+    #   cam.change_function_to_shoot 'still'
     #
     #   result = cam.get_parameter! :ExposureMode
     #   if result[:current]
@@ -325,7 +325,7 @@ module SonyCameraRemoteAPI
 
 
     # Returns whether the parameter is supported or not.
-    # @return [Boolean] +true+ if the parameter is supported, false otherwise.
+    # @return [Boolean] +true+ if the parameter is supported, +false+ otherwise.
     def support_group?(group_name)
       @api_groups.key? group_name
     end
