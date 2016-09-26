@@ -55,6 +55,7 @@ RSpec.configure do |c|
   # Variables in before(:suite) is not in the scope of examples.
   # So define here and assign them to instance variables in before(:all) below.
   model_tag, model_name = get_model_tag
+  shelf = nil
   cam = nil
   client = nil
   cam_rcn = nil
@@ -77,19 +78,17 @@ RSpec.configure do |c|
       STDIN.getch.chr
 
       # Select camera and connect using sonycam utility
-      `./exe/sonycam shelf select #{model_name}`
-      unless load_and_connect
+      shelf = SonyCameraRemoteAPI::Shelf.new File.expand_path('~/.sonycam.shelf')
+      shelf.select model_name
+      unless shelf.connect
         puts 'ERROR: Test exited because wi-fi connection setup failed!'
         exit! 1
       end
 
-      # Get saved endpoints URLs
-      config = JSON.load `./exe/sonycam shelf default --json`
-
       # Camera object for lib test
-      cam = SonyCameraRemoteAPI::Camera.new reconnect_by: method(:load_and_restart)
+      cam = SonyCameraRemoteAPI::Camera.new shelf
       # Camera object for reconnection test
-      cam_rcn = SonyCameraRemoteAPI::Camera.new endpoints: config['endpoints'], reconnect_by: method(:load_and_connect)
+      cam_rcn = SonyCameraRemoteAPI::Camera.new shelf, reconnect_by: shelf.method(:connect)
       # Client class for client test
       client = SonyCameraRemoteAPI::Client::Main
     end
@@ -107,21 +106,11 @@ RSpec.configure do |c|
   c.before(:all) do
     @model_tag = model_tag
     @mode_name = model_name
+    @shelf = shelf
     @cam = cam
     @client = client
     @cam_rcn = cam_rcn
   end
-end
-
-
-# Connect and reconnect to the camera.
-def load_and_connect
-  SonyCameraRemoteAPI::Scripts.run_external_command './exe/sonycam shelf connect'
-end
-
-# Connect and reconnect to the camera.
-def load_and_restart
-  SonyCameraRemoteAPI::Scripts.run_external_command './exe/sonycam shelf connect --restart'
 end
 
 

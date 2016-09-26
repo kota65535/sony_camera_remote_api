@@ -15,7 +15,7 @@ module SonyCameraRemoteAPI
   module Client
 
     # Default config file saved in home directory.
-    GLOBAL_CONFIG_FILE = File.expand_path('~/.sonycamconf')
+    GLOBAL_CONFIG_FILE = File.expand_path('~/.sonycam.shelf')
 
     # Main class of client
     class Main < Thor
@@ -37,43 +37,21 @@ module SonyCameraRemoteAPI
           options[:config] || GLOBAL_CONFIG_FILE
         end
 
-        def load_camera_config
-          # If SSID is specified, load the camera config.
-          if options[:ssid]
-            @shelf.get options[:ssid] || @shelf.get
-          else
-            @shelf.get
-          end
-        end
-
-        # Load camera config and connect
-        def load_and_connect
-          config = load_camera_config
-          unless config
-            puts 'Failed to load camera config!'
-            exit 1
-          end
-          unless Scripts.connect(config['interface'], config['ssid'], config['pass'])
-            puts 'Failed to connect!'
-            exit 1
-          end
-          config
-        end
 
         # Initialize camera instance
         def init_camera
           @shelf = Shelf.new config_file
-          config = load_and_connect
+          unless @shelf.select options[:ssid]
+            puts "No camera found having SSID #{options[:ssid]}"
+            exit 1
+          end
+          unless @shelf.connect
+            puts 'Failed to connect!'
+            exit 1
+          end
 
           puts 'Initializing camera...'
-          if config['endpoints'].nil?
-            @cam = SonyCameraRemoteAPI::Camera.new reconnect_by: method(:load_and_connect)
-            @shelf.set_ep config['ssid'], @cam.endpoints
-            puts 'SSDP configuration saved.'
-          else
-            @cam = SonyCameraRemoteAPI::Camera.new endpoints: config['endpoints'],
-                                                   reconnect_by: method(:load_and_connect)
-          end
+          @cam = SonyCameraRemoteAPI::Camera.new @shelf
           puts 'Camera initialization finished.'
 
           # Change directory if --dir options specified

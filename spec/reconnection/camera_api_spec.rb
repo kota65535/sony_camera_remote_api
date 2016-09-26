@@ -39,7 +39,7 @@ module SonyCameraRemoteAPI
             end
           end
           after do
-            cam.instance_variable_get(:@api_manager).instance_variable_set(:@reconnect_by, method(:load_and_connect))
+            cam.instance_variable_get(:@api_manager).instance_variable_set(:@reconnect_by, @shelf.method(:connect))
           end
           context 'with other service type API' do
             # Stubs permanently to fail API execution and reconnection
@@ -86,7 +86,7 @@ module SonyCameraRemoteAPI
           end
         end
         after do
-          cam.instance_variable_get(:@api_manager).instance_variable_set(:@reconnect_by, method(:load_and_connect))
+          cam.instance_variable_get(:@api_manager).instance_variable_set(:@reconnect_by, @shelf.method(:connect))
         end
       end
     end

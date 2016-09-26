@@ -50,7 +50,7 @@ module SonyCameraRemoteAPI
             expect { cam.capture_still }.to raise_error HTTPClient::ReceiveTimeoutError
           end
           after do
-            cam.instance_variable_set(:@reconnect_by, method(:load_and_connect))
+            cam.instance_variable_set(:@reconnect_by, @shelf.method(:connect))
           end
         end
       end
@@ -86,7 +86,7 @@ module SonyCameraRemoteAPI
             expect { cam.transfer_contents(cam.get_content_list(type: 'still', count: 1)) }.to raise_error HTTPClient::ReceiveTimeoutError
           end
           after do
-            cam.instance_variable_set(:@reconnect_by, method(:load_and_connect))
+            cam.instance_variable_set(:@reconnect_by, @shelf.method(:connect))
           end
         end
       end
@@ -130,7 +130,7 @@ module SonyCameraRemoteAPI
             end.to_not raise_error
           end
           after do
-            cam.instance_variable_set(:@reconnect_by, method(:load_and_connect))
+            cam.instance_variable_set(:@reconnect_by, @shelf.method(:connect))
           end
         end
       end

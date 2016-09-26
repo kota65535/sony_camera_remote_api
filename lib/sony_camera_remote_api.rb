@@ -38,16 +38,24 @@ module SonyCameraRemoteAPI
 
     # Creates a new Camera object.
     # @note It is good idea to save endpoint URLs by each cameras somewhere to omit SSDP search.
-    # @param [Hash] endpoints     Endpoint URLs. If not given, SSDP search is executed to get them.
+    # @param [Shelf] shelf        Shelf class object that is used for connection.
     # @param [Proc] reconnect_by  Hook method to reconnect to the camera, which is called when Wi-Fi is disconnected.
+    #   Not necessary if +shelf+ is given.
     # @param [String, IO, Array<String, IO>] log_file File name or stream to output log.
-    # @param [Boolean] finalize   If true, stopRecMode API is called in the destructor.
-    #   As far as I know, we don't have any trouble even if we never call stopRecMode.
-    def initialize(endpoints: nil, reconnect_by: nil, log_file: $stdout, log_level: Logger::INFO, finalize: false)
+    # @param [Boolean] finalize   If +true+, stopRecMode API is called in the destructor.
+    #   As far as I know, we have no problem even if we never call stopRecMode.
+    def initialize(shelf = nil, reconnect_by: nil, log_file: $stdout, log_level: Logger::INFO, finalize: false)
       set_output log_file
       set_level  log_level
-      @endpoints = endpoints || ssdp_search
-      @reconnect_by = reconnect_by
+      if shelf
+        @endpoints = shelf.ep || ssdp_search
+        shelf.set_ep @endpoints
+        @reconnect_by = shelf.method(:reconnect)
+      else
+        @endpoints = ssdp_search
+      end
+      @reconnect_by = reconnect_by if reconnect_by
+
       @api_manager = CameraAPIManager.new @endpoints, reconnect_by: @reconnect_by
       @cli = HTTPClient.new
       @cli.connect_timeout  = @cli.send_timeout = @cli.receive_timeout = 30
@@ -1110,7 +1118,7 @@ module SonyCameraRemoteAPI
     # If error still continues, give it up and raise the error.
     def reconnect_and_retry(retrying: true, num: 1, hook: nil)
       yield
-    rescue HTTPClient::TimeoutError, Errno::EHOSTUNREACH, Errno::ECONNREFUSED => e
+    rescue HTTPClient::BadResponseError, HTTPClient::TimeoutError, Errno::EHOSTUNREACH, Errno::ECONNREFUSED => e
       retry_count ||= 0
       raise e if @reconnect_by.nil? || retry_count >= num
       log.error "#{e.class}: #{e.message}"
@@ -1136,7 +1144,7 @@ module SonyCameraRemoteAPI
 
     def reconnect_and_retry_forever(&block)
       reconnect_and_retry &block
-    rescue HTTPClient::TimeoutError, Errno::EHOSTUNREACH, Errno::ECONNREFUSED => e
+    rescue HTTPClient::BadResponseError, HTTPClient::TimeoutError, Errno::EHOSTUNREACH, Errno::ECONNREFUSED => e
       retry
     end
 
