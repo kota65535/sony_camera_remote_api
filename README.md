@@ -1,6 +1,6 @@
-# Sony Remote Camera API Wrapper
+# Sony Camera Remote API Wrapper
 
-A Ruby Gem that facilitates the use of Sony Remote Camera API.
+A Ruby Gem that facilitates the use of Sony Camera Remote API.
 
 - [Backgrounds](#backgrounds)
 - [Features](#features)
