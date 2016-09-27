@@ -52,28 +52,31 @@ Or install it yourself as:
 
 ## Usage
 
-1. Connect your PC to the camera by Direct Wi-Fi. If you are using Linux, bundled scripts and its interface method are available.
-2. Create SonyCameraRemoteAPI::Camera object. It takes a little time because of SSDP search.
-3. Now you can call not only wrapper methods but also original APIs as a method!
+1. Connect your PC (or device) to the camera with Direct Wi-Fi. If you are using Linux, it is recommended to use
+   Shelf class like the following example.
+2. Create SonyCameraRemoteAPI::Camera instance with Shelf instance.
+3. Now you can access all of camera APIs and useful wrapper methods!
 
-If you want to take a picture and save it:
+This is an example code of capturing single still image.
 
 ```ruby
 require 'sony_camera_remote_api'
-require 'sony_camera_remote_api/scripts'
 
 interface = "wlan0"
 ssid = "DIRECT-xxxx:ILCE-QX1"
 pass = "xxxxxxxx"
 
-SonyCameraRemoteAPI::Scripts.connect interface, ssid, pass
-cam = SonyCameraRemoteAPI::Camera.new
+shelf = SonyCameraRemoteAPI::Shelf.new 'sonycam.shelf'
+shelf.add_and_select ssid, pass, interface
+shelf.connect
+
+cam = SonyCameraRemoteAPI::Camera.new shelf
 cam.change_function_to_shoot 'still', 'Single'
 cam.capture_still
 # => Captured jpeg file is transferred to your PC
 ```
 
-For more information, see [Wiki](https://github.com/kota65535/sony_camera_remote_api/wiki).
+For more information, see project's [Wiki](https://github.com/kota65535/sony_camera_remote_api/wiki).
 
 
 ## TODO
