@@ -422,9 +422,24 @@ module SonyCameraRemoteAPI
     #   cam = SonyCameraRemoteAPI::Camera.new
     #   cam.change_function_to_shoot 'still'
     #
-    #   # Try to focus on upper-middle position.
-    #   if cam.act_touch_focus(50, 10)
-    #     cam.capture_still
+    #   th = cam.start_liveview_thread do |img, info|
+    #     tf = info.frames.find { |f| f.category == 1 }
+    #     if tf
+    #       # Get current focus position.
+    #       puts "  top-left     = (#{tf.top_left.x}, #{tf.top_left.y})"
+    #       puts "  bottom-right = (#{tf.bottom_right.x}, #{tf.bottom_right.y})"
+    #     else
+    #       puts 'No focus frame!'
+    #     end
+    #   end
+    #
+    #   # Do touch focus ramdonly, and capture a still if focused.
+    #   loop do
+    #     cam.act_touch_focus rand(101), rand(101)
+    #     if cam.focused?
+    #       cam.capture_still
+    #     end
+    #     sleep 1
     #   end
     def act_touch_focus(x, y)
       return false unless support? :setTouchAFPosition
@@ -456,22 +471,30 @@ module SonyCameraRemoteAPI
     #   cam = SonyCameraRemoteAPI::Camera.new
     #   cam.change_function_to_shoot 'still'
     #
-    #   # Start tracking focus from the center position
-    #   if cam.act_tracking_focus(50, 50)
-    #     th = cam.start_liveview_thread do |img, info|
-    #       info.frames.each do |f|
-    #         # Get tracking focus position from the liveview frame info
-    #         puts "top-left:     (#{f.top_left.x}, #{f.top_left.y})"
-    #         puts "bottom-right: (#{f.bottom_right.x}, #{f.bottom_right.y})"
-    #       end
+    #   th = cam.start_liveview_thread do |img, info|
+    #     tracking_frame = info.frames.find { |f| f.category == 5 }
+    #     if tracking_frame
+    #       # Get tracking focus position from the liveview frame info
+    #       puts "  top-left     = (#{tracking_frame.top_left.x}, #{tracking_frame.top_left.y})"
+    #       puts "  bottom-right = (#{tracking_frame.bottom_right.x}, #{tracking_frame.bottom_right.y})"
+    #     else
+    #       puts 'No tracking frame!'
     #     end
-    #     th.join
+    #   end
+    #
+    #   # Capture a still image while tracking.
+    #   loop do
+    #     if cam.tracking?
+    #       cam.capture_still
+    #     else
+    #       cam.act_tracking_focus 50, 50
+    #     end
+    #     sleep 1
     #   end
     def act_tracking_focus(x, y)
       return false unless support? :TrackingFocus
       cancel_focus
       set_parameter :TrackingFocus, 'On'
-
 
       x = [[x, 100].min, 0].max
       y = [[y, 100].min, 0].max
