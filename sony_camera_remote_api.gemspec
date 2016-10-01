@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["kota65535"]
   spec.email         = ["kota65535@gmail.com"]
 
-  spec.summary       = %q{A Ruby Gem that facilitates the use of Sony Remote Camera API.}
+  spec.summary       = %q{A Ruby Gem that facilitates the use of Sony Camera Remote API.}
   # spec.description   = %q{A Ruby Gem that facilitates the use of Sony Remote Camera API.}
   spec.homepage      = "https://github.com/kota65535/sony_camera_remote_api"
   spec.license       = "MIT"
