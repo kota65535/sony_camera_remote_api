@@ -1,9 +1,9 @@
 if !ENV['COVERAGE'].nil?
   SimpleCov.start do
     add_filter '/spec'
-    # Merge all tests run in 1.5 hours
+    # Merge all tests run in 2 hours
     use_merging true
-    merge_timeout 5400
+    merge_timeout 7200
     command_name "cmd_#{Time.now}"
     puts 'SimpleCov started!!!'
     # minimum_coverage(91.69)
