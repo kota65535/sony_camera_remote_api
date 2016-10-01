@@ -35,7 +35,14 @@ module SonyCameraRemoteAPI
       @cli = HTTPClient.new
       @cli.connect_timeout  = @cli.send_timeout = @cli.receive_timeout = 30
 
-      unless call_api('camera', 'getApplicationInfo', [], 1, '1.0').result[1] >= '2.0.0'
+      begin
+        result = call_api('camera', 'getApplicationInfo', [], 1, '1.0').result
+      rescue StandardError => e
+        retry_count = retry_count ? retry_count + 1 : 0
+        sleep 1
+        retry if retry_count < 3
+      end
+      unless result[1] >= '2.0.0'
         raise ServerNotCompatible, 'API version of the server < 2.0.0.'
       end
       @apis = make_api_list
