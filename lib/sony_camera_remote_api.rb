@@ -423,11 +423,11 @@ module SonyCameraRemoteAPI
     #   cam.change_function_to_shoot 'still'
     #
     #   th = cam.start_liveview_thread do |img, info|
-    #     tf = info.frames.find { |f| f.category == 1 }
-    #     if tf
+    #     focus_frame = info.frames.find { |f| f.category == 1 }
+    #     if focus_frame
     #       # Get current focus position.
-    #       puts "  top-left     = (#{tf.top_left.x}, #{tf.top_left.y})"
-    #       puts "  bottom-right = (#{tf.bottom_right.x}, #{tf.bottom_right.y})"
+    #       puts "  top-left     = (#{focus_frame.top_left.x}, #{focus_frame.top_left.y})"
+    #       puts "  bottom-right = (#{focus_frame.bottom_right.x}, #{focus_frame.bottom_right.y})"
     #     else
     #       puts 'No focus frame!'
     #     end
@@ -1143,7 +1143,8 @@ module SonyCameraRemoteAPI
       yield
     rescue HTTPClient::BadResponseError, HTTPClient::TimeoutError, Errno::EHOSTUNREACH, Errno::ECONNREFUSED => e
       retry_count ||= 0
-      raise e if @reconnect_by.nil? || retry_count >= num
+      retry_count += 1
+      raise e if @reconnect_by.nil? || retry_count > num
       log.error "#{e.class}: #{e.message}"
       log.error 'The camera seems to be disconnected! Reconnecting...'
       unless @reconnect_by.call
@@ -1161,7 +1162,6 @@ module SonyCameraRemoteAPI
           raise e
         end
       end
-      retry_count += 1
       retry if retrying
     end
 

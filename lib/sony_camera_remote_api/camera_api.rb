@@ -212,7 +212,8 @@ module SonyCameraRemoteAPI
       yield
     rescue HTTPClient::TimeoutError, Errno::EHOSTUNREACH, Errno::ECONNREFUSED => e
       retry_count ||= 0
-      raise e if @reconnect_by.nil? || retry_count >= num
+      retry_count += 1
+      raise e if @reconnect_by.nil? || retry_count > num
       log.error "#{e.class}: #{e.message}"
       log.error 'The camera seems to be disconnected! Reconnecting...'
       unless @reconnect_by.call
@@ -231,7 +232,6 @@ module SonyCameraRemoteAPI
           raise e
         end
       end
-      retry_count += 1
       retry
     end
   end
