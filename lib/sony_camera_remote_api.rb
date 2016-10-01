@@ -713,7 +713,7 @@ module SonyCameraRemoteAPI
       source = getSourceList([{'scheme' => scheme}]).result[0][0]['source']
 
       if date
-        date_found, cnt = get_date_list.find { |d| d[0]['title'] == date }
+        date_found = get_date_list.find { |d| d['title'] == date }
         if date_found
           contents = get_content_list_sub date_found['uri'], type: type, view: 'date', sort: sort, count: count
         else
@@ -725,19 +725,19 @@ module SonyCameraRemoteAPI
         if type.present?
           # if 'type' option is specified, call getContentList with date view for every date.
           # this is because getContentList with flat view is extremely slow as a number of contents grows.
-          dates_counts = get_date_list type: type, sort: sort
+          dates = get_date_list type: type, sort: sort
           contents = []
           if count.present?
-            dates_counts.each do |date, cnt_of_date|
-              num = [cnt_of_date, count - contents.size].min
+            dates.each do |date|
+              num = [date['contentCount'], count - contents.size].min
               contents += get_content_list_sub date['uri'], type: type, view: 'date', sort: sort, count: num
               break if contents.size >= count
             end
             # it is no problem that a number of contents is less than count
             contents = contents[0, count]
           else
-            dates_counts.each do |date, cnt_of_date|
-              contents += get_content_list_sub date['uri'], type: type, view: 'date', sort: sort, count: cnt_of_date
+            dates.each do |date|
+              contents += get_content_list_sub date['uri'], type: type, view: 'date', sort: sort, count: date['contentCount']
             end
           end
         else
@@ -756,22 +756,22 @@ module SonyCameraRemoteAPI
     # @param [String] sort                  Same as 'sort' request parameter of getContentList API
     # @param [Fixnum] date_count            Number of dates to get.
     # @param [Fixnum] content_count         Number of contents to get
-    # @return [Array< Array<String, Fixnum> >]  Array of pairs of a date in format of 'YYYYMMDD' and a number of contents of the date.
+    # @return [Array<Hash>]  An array of dates in format of 'YYYYMMdd' and an array of number of contents of the associated date.
     # @example
     #   # Initialize
     #   cam = SonyCameraRemoteAPI::Camera.new
     #   cam.change_function_to_transfer
     #
-    #   # Get all dates and the number of contents of the date
+    #   # Get all dates and content counts of the associated date.
     #   dates = cam.get_date_list
-    #   # Get 5 newest dates that contains at least one XAVC-S movie content.
+    #   # Get 5 newest dates that contains XAVC-S movie contents.
     #   dates = cam.get_date_list(type: 'movie_xavcs', date_count: 5)
-    #   # Get all dates that contains at least 10 still contents.
-    #   dates = cam.get_date_list(type: 'still', content_count: 10)
+    #   # Get dates until the sum of still contents of each date exceeds 100.
+    #   dates = cam.get_date_list(type: 'still', content_count: 100)
     #
-    #   dates.each do |date, count|
-    #     # Get date and its content count
-    #     puts "#{date['title']}, #{count}"
+    #   dates.each do |date|
+    #     puts "date:  #{date['title']}"            # Get date in the format 'YYYYMMdd'
+    #     puts "count: #{date['contentCount']}"     # Get content count
     #     # Get contents of each date
     #     contents = cam.get_content_list date: date['title']
     #     # Transfer contents
@@ -796,9 +796,12 @@ module SonyCameraRemoteAPI
       dates.each do |d|
         cnt = getContentCount([{'uri' => d['uri'], 'type' => type, 'view' => 'date'}]).result[0]['count']
         # Exclude days of 0 contents.
-        filtered_dates << [d, cnt] if cnt > 0
+        if cnt > 0
+          d['contentCount'] = cnt
+          filtered_dates << d
+        end
         # Break if contents count exceeds.
-        break if content_count and filtered_dates.map { |d, c| c }.inject(0, :+) > content_count
+        break if content_count and filtered_dates.map { |d| d['contentCount'] }.inject(0, :+) > content_count
         # Break if date count exceeds.
         break if date_count and filtered_dates.size > date_count
       end

@@ -574,12 +574,12 @@ module SonyCameraRemoteAPI
 
         puts 'Retrieving...'
         if options[:datelist]
-          dates = @cam.get_date_list date_count: options[:count]
-          num_contents = dates.map { |d, c| c }.inject(:+)
+          dates  = @cam.get_date_list date_count: options[:count]
+          num_contents = dates.map { |d| d['contentCount'] }.inject(:+)
           puts "#{dates.size} date folders / #{num_contents} contents found."
           puts "Dates\t\tN-Contents"
-          dates.each do |date, count|
-            puts "#{date['title']}\t#{count}"
+          dates.each do |date|
+            puts "#{date['title']}\t#{date['contentCount']}"
           end
           return
         end

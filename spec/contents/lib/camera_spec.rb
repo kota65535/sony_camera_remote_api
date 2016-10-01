@@ -28,78 +28,78 @@ module SonyCameraRemoteAPI
     describe '#get_date_list' do
       context 'with no option' do
         it 'get all pairs of date and the number of contents' do
-          dates_counts = cam.get_date_list
-          dates_counts.each do |date, count|
-            puts "#{date['title']}\t#{count}"
+          dates = cam.get_date_list
+          dates.each do |d|
+            puts "#{d['title']}\t#{d['contentCount']}"
           end
-          expect(dates_counts.map { |d, c| d['title'] }).to all(match(/2016080?/))
-          expect(dates_counts.map { |d, c| c }).to all(eq($NUM_ALL))
+          expect(dates.map { |d| d['title'] }).to all(match(/2016080?/))
+          expect(dates.map { |d| d['contentCount'] }).to all(eq($NUM_ALL))
         end
       end
       context 'with type option' do
         it 'get all dates having movie_mp4 contents and its number' do
-          dates_counts = cam.get_date_list type: 'movie_mp4'
-          dates_counts.each do |date, count|
-            puts "#{date['title']}\t#{count}"
+          dates = cam.get_date_list type: 'movie_mp4'
+          dates.each do |d|
+            puts "#{d['title']}\t#{d['contentCount']}"
           end
-          expect(dates_counts.map { |d, c| d['title'] }).to all(match(/2016080?/))
-          expect(dates_counts.map { |d, c| c }).to all(eq($NUM_MP4))
+          expect(dates.map { |d| d['title'] }).to all(match(/2016080?/))
+          expect(dates.map { |d| d['contentCount'] }).to all(eq($NUM_MP4))
         end
       end
       context 'with type option (multiple)' do
         it 'get all dates having movie_mp4 or movie_xavcs contents and its total number' do
-          dates_counts = cam.get_date_list type: %w(movie_mp4 movie_xavcs)
-          dates_counts.each do |date, count|
-            puts "#{date['title']}\t#{count}"
+          dates = cam.get_date_list type: %w(movie_mp4 movie_xavcs)
+          dates.each do |d|
+            puts "#{d['title']}\t#{d['contentCount']}"
           end
-          expect(dates_counts.map { |d, c| d['title'] }).to all(match(/2016080?/))
-          expect(dates_counts.map { |d, c| c }).to all(eq($NUM_MP4+$NUM_XAVCS))
+          expect(dates.map { |d| d['title'] }).to all(match(/2016080?/))
+          expect(dates.map { |d| d['contentCount'] }).to all(eq($NUM_MP4+$NUM_XAVCS))
         end
       end
       context 'with date_count option' do
         it 'get dates by date_count' do
-          dates_counts = cam.get_date_list date_count: 3
-          dates_counts.each do |date, count|
-            puts "#{date['title']}\t#{count}"
+          dates = cam.get_date_list date_count: 3
+          dates.each do |d|
+            puts "#{d['title']}\t#{d['contentCount']}"
           end
-          expect(dates_counts.map { |d, c| d['title'] }).to all(match(/2016080?/))
-          expect(dates_counts.size).to eq(3)
+          expect(dates.map { |d| d['title'] }).to all(match(/2016080?/))
+          expect(dates.size).to eq(3)
         end
       end
       context 'with content_count option' do
         it 'get dates so that the number of contents reaches content_count' do
-          dates_counts = cam.get_date_list content_count: $NUM_ALL+1
-          dates_counts.each do |date, count|
-            puts "#{date['title']}\t#{count}"
+          dates = cam.get_date_list content_count: $NUM_ALL+1
+          dates.each do |d|
+            puts "#{d['title']}\t#{d['contentCount']}"
           end
-          expect(dates_counts.map { |d, c| d['title'] }).to all(match(/2016080?/))
-          expect(dates_counts.size).to eq(2)
-          expect(dates_counts.map { |d, c| c }).to all(eq($NUM_ALL))
+          expect(dates.map { |d| d['title'] }).to all(match(/2016080?/))
+          expect(dates.size).to eq(2)
+          expect(dates.map { |d| d['contentCount'] }).to all(eq($NUM_ALL))
         end
       end
       context 'with type and date_count option' do
         it 'get dates having moive_mp4 by date_count' do
-          dates_counts = cam.get_date_list type: 'movie_mp4', date_count: 3
-          expect(dates_counts.size).to eq(3)
-          expect(dates_counts.map { |d, c| c }).to all(eq($NUM_MP4))
+          dates = cam.get_date_list type: 'movie_mp4', date_count: 3
+          expect(dates.size).to eq(3)
+          expect(dates.map { |d| d['contentCount'] }).to all(eq($NUM_MP4))
         end
       end
       context 'with type and content_count option' do
         it 'get dates having movie_mp4 so that the number of contents reaches content_count' do
-          dates_counts = cam.get_date_list type: 'movie_mp4', content_count: $NUM_MP4*2+1
-          dates_counts.each do |date, count|
-            puts "#{date['title']}\t#{count}"
+          dates = cam.get_date_list type: 'movie_mp4', content_count: $NUM_MP4*2+1
+          dates.each do |d|
+            puts "#{d['title']}\t#{d['contentCount']}"
           end
-          expect(dates_counts.size).to eq(3)
-          expect(dates_counts.map { |d, c| c }).to all(eq($NUM_MP4))
+          expect(dates.size).to eq(3)
+          expect(dates.map { |d| d['contentCount'] }).to all(eq($NUM_MP4))
           # expect(dates_counts.transpose[1].inject(:+)).to eq(13)
         end
       end
       context 'with sort option' do
         it 'get all dates and the number of contents in ascending order' do
-          dates_counts = cam.get_date_list(sort: 'ascending')
-          dates_counts.each do |date, count|
-            puts "#{date['title']}\t#{count}"
+          dates = cam.get_date_list(sort: 'ascending')
+          dates.each do |d|
+            puts "#{d['title']}\t#{d['contentCount']}"
           end
           # TODO: write expectation
         end
