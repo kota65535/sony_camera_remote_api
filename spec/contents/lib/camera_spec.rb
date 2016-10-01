@@ -205,47 +205,94 @@ module SonyCameraRemoteAPI
     describe '#transfer_contents' do
       let(:dir) { 'images' }
       let(:filenames) { (1..5).map { |n| "test_#{n}.JPG" } }
+      let(:filenames_noext) { (1..5).map { |n| "test_#{n}" } }
       let(:contents) { cam.get_content_list type: 'still', count: 5 }
+      let(:movie_contents) { cam.get_content_list type: 'movie_mp4', count: 5 }
       before :each do
         FileUtils.rm_r 'images' if Dir.exists? 'images'
       end
       after :each do
         FileUtils.rm_r 'images' if Dir.exists? 'images'
       end
-      context 'without filename argument' do
-        it 'gets 5 still contents by original filenames' do
+
+      it 'gets 5 still contents by original filenames' do
+        cam.transfer_contents contents, dir: dir
+        expect(Dir.entries(dir).count { |e| e.match(/DSC\d+\.JPG/) }).to eq(5)
+      end
+      context 'with size argument' do
+        it 'gets 5 still contents by original filenames + size postfix' do
           cam.transfer_contents contents, dir: dir, size: 'thumbnail'
-          expect(Dir.entries(dir).count { |e| e.match(/DSC\d+\.JPG/) }).to eq(5)
+          expect(Dir.entries(dir).count { |e| e.match(/DSC\d+_thumbnail\.JPG/) }).to eq(5)
+        end
+        it 'gets 5 movie contents by original filenames + size postfix' do
+          cam.transfer_contents movie_contents, dir: dir, size: 'thumbnail'
+          expect(Dir.entries(dir).count { |e| e.match(/(C|MAH|MAF)\d+_thumbnail\.JPG/) }).to eq(5)
+        end
+        it 'gets 5 movie contents and its thumbnail' do
+          cam.transfer_contents movie_contents, dir: dir, size: %w(original thumbnail)
+          expect(Dir.entries(dir).count { |e| e.match(/(C|MAH|MAF)\d+\.MP4/) }).to eq(5)
+          expect(Dir.entries(dir).count { |e| e.match(/(C|MAH|MAF)\d+_thumbnail\.JPG/) }).to eq(5)
         end
       end
-      context 'with filename array whose size is equal to contents' do
-        it 'gets 5 still contents by given filenames' do
-          cam.transfer_contents contents, filenames, dir: dir, size: 'small'
-          contents.each do |c|
-            puts c['content']['original'][0]['url']
+      context 'with filenames argument' do
+        context 'whose size is equal to contents' do
+          it 'gets 5 still contents by given filenames' do
+            cam.transfer_contents contents, filenames, dir: dir
+            contents.each do |c|
+              puts c['content']['original'][0]['url']
+            end
+            expect(Dir.entries(dir).count { |e| e.match(/test_\d\.JPG/) }).to eq(5)
           end
-          expect(Dir.entries(dir).count { |e| e.match(/test_\d.JPG/) }).to eq(5)
+          context 'with size argument' do
+            it 'gets 5 still contents by given filenames + size postfix' do
+              cam.transfer_contents contents, filenames_noext, dir: dir, size: %w(large small)
+              contents.each do |c|
+                puts c['content']['original'][0]['url']
+              end
+              expect(Dir.entries(dir).count { |e| e.match(/test_\d_\w+.JPG/) }).to eq(10)
+            end
+            it 'gets 5 movie contents and its thumbnail by given filenames ' do
+              cam.transfer_contents movie_contents, filenames_noext, dir: dir, size: %w(original thumbnail)
+              contents.each do |c|
+                puts c['content']['original'][0]['url']
+              end
+              expect(Dir.entries(dir).count { |e| e.match(/test_\d_\w+.JPG/) }).to eq(5)
+              expect(Dir.entries(dir).count { |e| e.match(/test_\d\.MP4/) }).to eq(5)
+            end
+          end
         end
-      end
-      context 'with filename array whose size is smaller than contents' do
-        it 'gets 3 still contents by given filename and 2 by original filename' do
-          cam.transfer_contents contents, filenames[0, 3], dir: dir, size: 'large'
-          expect(Dir.entries(dir).count { |e| e.match(/test_\d.JPG/) }).to eq(3)
-          expect(Dir.entries(dir).count { |e| e.match(/DSC\d+\.JPG/) }).to eq(2)
+        context 'whose size is smaller than that of contents' do
+          it 'gets 3 still contents by given filename and 2 by original filename' do
+            cam.transfer_contents contents, filenames[0, 3], dir: dir, size: 'large'
+            expect(Dir.entries(dir).count { |e| e.match(/test_\d_large.JPG/) }).to eq(3)
+            expect(Dir.entries(dir).count { |e| e.match(/DSC\d+_large\.JPG/) }).to eq(2)
+          end
         end
-      end
-      context 'with filename list > contents list' do
-        it 'gets 3 still contents by given filenames' do
-          cam.change_function_to_transfer
-          cam.transfer_contents contents[0, 3], filenames, dir: dir
-          expect(Dir.entries(dir).count { |e| e.match(/test_\d.JPG/) }).to eq(3)
+        context 'whose size is bigger thant that of contents' do
+          it 'gets 3 still contents by given filenames' do
+            cam.change_function_to_transfer
+            cam.transfer_contents contents[0, 3], filenames, dir: dir
+            expect(Dir.entries(dir).count { |e| e.match(/test_\d.JPG/) }).to eq(3)
+          end
         end
-      end
-      context 'with filename list being nil' do
-        it 'gets 3 still contents by given filenames' do
-          cam.change_function_to_transfer
-          cam.transfer_contents contents, nil, dir: dir
-          expect(Dir.entries(dir).count { |e| e.match(/DSC\d+\.JPG/) }).to eq(5)
+        context 'with filename list being nil' do
+          it 'gets 3 still contents by given filenames' do
+            cam.change_function_to_transfer
+            cam.transfer_contents contents, nil, dir: dir
+            expect(Dir.entries(dir).count { |e| e.match(/DSC\d+\.JPG/) }).to eq(5)
+          end
+        end
+        context 'with illegal contents size' do
+          it 'gets nothing' do
+            cam.transfer_contents contents, dir: dir, size: 'hoge'
+            expect(Dir.exists?(dir)).to eq false
+            cam.transfer_contents movie_contents, dir: dir, size: %w(large small)
+            expect(Dir["#{dir}/*"].size).to eq 0
+          end
+          it 'gets contents with valid size only' do
+            cam.transfer_contents movie_contents, dir: dir, size: %w(small thumbnail)
+            expect(Dir.entries(dir).count { |e| e.match(/(C|MAH|MAF)\d+_thumbnail\.JPG/) }).to eq(5)
+          end
         end
       end
       context 'with contents list being nil' do

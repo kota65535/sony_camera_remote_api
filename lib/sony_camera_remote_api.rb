@@ -810,7 +810,7 @@ module SonyCameraRemoteAPI
 
 
     # Predefined transfer sizes
-    SIZE_LIST = %w(original large small thumbnail).freeze
+    TRANSFER_SIZE_LIST = %w(original large small thumbnail).freeze
     # Transfer content(s) from the camera storage.
     # @note You have to set camera function to 'Contents Transfer' before calling this method.
     # @param [Array<Hash>] contents     Array of content information, which can be obtained by get_content_list
@@ -820,13 +820,15 @@ module SonyCameraRemoteAPI
     # @see get_date_list
     # @todo If 'contents' is directory (date), get all contents of the directory.
     def transfer_contents(contents, filenames=[], dir: nil, size: 'original')
-      if SIZE_LIST.exclude?(size)
-        log.error "#{size} is invalid for size option!"
+      contents = [contents].compact unless contents.is_a? Array
+      filenames = [filenames].compact unless filenames.is_a? Array
+      size = [size].compact unless size.is_a? Array
+      unless size.map { |s| TRANSFER_SIZE_LIST.include? s }.all?
+        log.error "'size' argument contains invalid size name!"
+        log.error "Available sizes are: #{TRANSFER_SIZE_LIST}"
         return nil
       end
 
-      contents = [contents].compact unless contents.is_a? Array
-      filenames = [filenames].compact unless filenames.is_a? Array
       if !filenames.empty?
         if contents.size > filenames.size
           log.warn 'Size of filename list is smaller than that of contents list!'
@@ -836,25 +838,12 @@ module SonyCameraRemoteAPI
         end
       end
 
-      urls_filenames = contents.zip(filenames).map do |content, filename|
-        next unless content
-        url =
-            case size
-              when 'original'
-                raise StandardError if content['content']['original'].size > 1 # FIXME: When do we come here???
-                content['content']['original'][0]['url']
-              when 'large'
-                content['content']['largeUrl']
-              when 'small'
-                content['content']['smallUrl']
-              when 'thumbnail'
-                content['content']['thumbnailUrl']
-            end
-        filename ||= content['content']['original'][0]['fileName']
-        [url, filename]
+      urls_filenames = get_content_url(contents, filenames, size)
+      if urls_filenames.empty?
+        log.warn 'No contents to be transferred.'
+        return []
       end
-
-      log.info "#{contents.size} contents to be transferred."
+      log.info "#{urls_filenames.size} contents to be transferred."
       transferred = transfer_contents_sub(urls_filenames, dir)
       if transferred.size == urls_filenames.size
         log.info 'All transfer completed.'
@@ -1136,6 +1125,47 @@ module SonyCameraRemoteAPI
         transferred << filepath
       end
       transferred
+    end
+
+
+    def get_content_url(contents, filenames, sizes)
+      urls_filenames = []
+      contents.zip(filenames).product(sizes).map { |e| e.flatten }.each do |content, filename, size|
+        next unless content
+
+        filename ||= content['content']['original'][0]['fileName']
+        base = File.basename filename, '.*'
+        case size
+          when 'original'
+            raise StandardError if content['content']['original'].size > 1 # FIXME: When do we come here???
+            url = content['content']['original'][0]['url']
+            ext =
+                case content['contentKind']
+                  when 'still'
+                    '.JPG'
+                  when 'movie_mp4'
+                    '.MP4'
+                  when 'movie_xavcs'
+                    '.MP4'
+                end
+            filename = "#{base}#{ext}"
+          when 'large'
+            url = content['content']['largeUrl']
+            filename = "#{base}_large.JPG"
+          when 'small'
+            url = content['content']['smallUrl']
+            filename = "#{base}_small.JPG"
+          when 'thumbnail'
+            url = content['content']['thumbnailUrl']
+            filename = "#{base}_thumbnail.JPG"
+        end
+        if url.empty?
+          log.error "Skipping empty URL for file: #{filename}, size: #{size}"
+        else
+          urls_filenames << [url, filename]
+        end
+      end
+      urls_filenames
     end
 
 
