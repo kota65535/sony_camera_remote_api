@@ -160,27 +160,6 @@ module SonyCameraRemoteAPI
       end
 
 
-      desc 'default', 'Show the default camera currently selected'
-      option :json, type: :boolean, desc: 'output in JSON format'
-      def default
-        read_or_create_shelf
-
-        default = @shelf.get
-        unless default
-          puts 'ERROR: Default camera is not selected yet!'
-          return
-        end
-
-        if options[:json]
-          puts JSON.pretty_generate default
-        else
-          puts "SSID      : #{default['ssid']} "
-          puts "Password  : #{default['pass']} "
-          puts "Interface : #{default['interface']} "
-        end
-      end
-
-
       desc 'connect [options]', 'Connect to the default camera'
       option :restart, aliases: '-r', type: :boolean, desc: 'Restart interface', default: false
       option :ssid, aliases: '-s', type: :string, desc: 'Specify camera by SSID'
