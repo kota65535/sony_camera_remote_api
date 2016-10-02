@@ -813,13 +813,14 @@ module SonyCameraRemoteAPI
     TRANSFER_SIZE_LIST = %w(original large small thumbnail).freeze
     # Transfer content(s) from the camera storage.
     # @note You have to set camera function to 'Contents Transfer' before calling this method.
-    # @param [Array<Hash>] contents     Array of content information, which can be obtained by get_content_list
-    # @param [Array<String>] filenames  Array of filename strings
-    # @param [String] size              Content size. available values are 'original', 'large', 'small', 'thumbnail'.
+    # @param [Array<Hash>] contents       Array of content information, which can be obtained by get_content_list
+    # @param [Array<String>] filenames    Array of filename strings
+    # @param [String, Array<String>] size Content size. available values are 'original', 'large', 'small', 'thumbnail'.
+    # @param [Boolean] add_postfix   If +true+, postfix is appended for 'large', 'small' and 'thumbnail' content size.
     # @see get_content_list
     # @see get_date_list
     # @todo If 'contents' is directory (date), get all contents of the directory.
-    def transfer_contents(contents, filenames=[], dir: nil, size: 'original')
+    def transfer_contents(contents, filenames=[], dir: nil, size: 'original', add_postfix: true)
       contents = [contents].compact unless contents.is_a? Array
       filenames = [filenames].compact unless filenames.is_a? Array
       size = [size].compact unless size.is_a? Array
@@ -838,7 +839,7 @@ module SonyCameraRemoteAPI
         end
       end
 
-      urls_filenames = get_content_url(contents, filenames, size)
+      urls_filenames = get_content_url(contents, filenames, size, add_postfix: add_postfix)
       if urls_filenames.empty?
         log.warn 'No contents to be transferred.'
         return []
@@ -936,7 +937,7 @@ module SonyCameraRemoteAPI
       else
         filenames = contents.map { |c| c['content']['original'][0]['fileName'] }
       end
-      transferred = transfer_contents contents, filenames, size: transfer_size, dir: dir
+      transferred = transfer_contents contents, filenames, size: transfer_size, dir: dir, add_postfix: false
       change_function_to_shoot 'still', 'Burst'
       transferred
     end
@@ -957,9 +958,9 @@ module SonyCameraRemoteAPI
       contents = get_content_list type: 'still', sort: 'descending', count: num_shots
       if prefix
         filenames = generate_sequencial_filenames prefix, 'JPG', num: contents.size
-        transferred = transfer_contents contents, filenames, dir: dir
+        transferred = transfer_contents contents, filenames, dir: dir, add_postfix: false
       else
-        transferred = transfer_contents contents, size: transfer_size, dir: dir
+        transferred = transfer_contents contents, size: transfer_size, dir: dir, add_postfix: false
       end
       change_function_to_shoot 'intervalstill'
       transferred
@@ -1128,13 +1129,14 @@ module SonyCameraRemoteAPI
     end
 
 
-    def get_content_url(contents, filenames, sizes)
+    def get_content_url(contents, filenames, sizes, add_postfix: true)
       urls_filenames = []
       contents.zip(filenames).product(sizes).map { |e| e.flatten }.each do |content, filename, size|
         next unless content
 
         filename ||= content['content']['original'][0]['fileName']
         base = File.basename filename, '.*'
+        postfix = add_postfix ? "_#{size}" : ''
         case size
           when 'original'
             raise StandardError if content['content']['original'].size > 1 # FIXME: When do we come here???
@@ -1151,13 +1153,13 @@ module SonyCameraRemoteAPI
             filename = "#{base}#{ext}"
           when 'large'
             url = content['content']['largeUrl']
-            filename = "#{base}_large.JPG"
+            filename = "#{base}#{postfix}.JPG"
           when 'small'
             url = content['content']['smallUrl']
-            filename = "#{base}_small.JPG"
+            filename = "#{base}#{postfix}.JPG"
           when 'thumbnail'
             url = content['content']['thumbnailUrl']
-            filename = "#{base}_thumbnail.JPG"
+            filename = "#{base}#{postfix}.JPG"
         end
         if url.empty?
           log.error "Skipping empty URL for file: #{filename}, size: #{size}"
