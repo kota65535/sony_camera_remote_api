@@ -52,7 +52,7 @@ Or install it yourself as:
 
 ## Usage
 
-1. Connect your PC (or device) to the camera with Direct Wi-Fi. If your PC uses **Linux** or **MacOS**, you can easiy do it by using `Shelf` class like following example.
+1. Connect your PC (or device) to the camera with Direct Wi-Fi. If your PC is **Linux** or **MacOS** machine, you can easiy do it by using `Shelf` class like following example.
 2. Create SonyCameraRemoteAPI::Camera instance with Shelf instance.
 3. Now you can access all of camera APIs and useful wrapper methods!
 
