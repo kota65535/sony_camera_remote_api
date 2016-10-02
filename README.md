@@ -61,14 +61,16 @@ This is an example code that takes a picture and transfer it to your PC.
 ```ruby
 require 'sony_camera_remote_api'
 
-interface = "wlan0"
-ssid = "DIRECT-xxxx:ILCE-QX1"
-pass = "xxxxxxxx"
+ssid = "DIRECT-xxxx:ILCE-QX1"   # SSID of camera
+pass = "xxxxxxxx"               # passphrase
+interface = "wlan0"             # interface by which you connect to the camera
 
+# Connect to the camera
 shelf = SonyCameraRemoteAPI::Shelf.new 'sonycam.shelf'
 shelf.add_and_select ssid, pass, interface
 shelf.connect
 
+# Initialize Camera class instance, with which you can access all camera functions.
 cam = SonyCameraRemoteAPI::Camera.new shelf
 cam.change_function_to_shoot 'still', 'Single'
 cam.capture_still
