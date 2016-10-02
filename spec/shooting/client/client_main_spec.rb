@@ -99,7 +99,7 @@ describe SonyCameraRemoteAPI::Client::Main do
         end
         context 'without time option' do
           it 'capture stills by the interval until SIGINT sent' do
-            output = capture_process(time: 6) { client.start(%W(still --dir #{image_dir} --interval 5)) }
+            output = capture_process(6) { client.start(%W(still --dir #{image_dir} --interval 5)) }
             matched = output.scan(/Transferred (DSC\d+\.JPG)/).map { |e| e[0] }
             expect(matched.size).to be >= 1
             expect(Dir.entries(image_dir)).to include(*matched)
@@ -204,7 +204,7 @@ describe SonyCameraRemoteAPI::Client::Main do
       end
       context 'without time option' do
         it 'captures stills continuously until SIGINT sent' do
-          output = capture_process(time: 6) { client.start(%W(rapid --dir #{image_dir} --mode Continuous --transfer)) }
+          output = capture_process(6) { client.start(%W(rapid --dir #{image_dir} --mode Continuous --transfer)) }
           matched = output.scan(/Transferred (DSC\d+\.JPG)/).map { |e| e[0] }
           expect(matched.size).to be >= 1
           expect(Dir.entries(image_dir)).to include(*matched)
@@ -253,7 +253,7 @@ describe SonyCameraRemoteAPI::Client::Main do
     end
     context 'without time option' do
       it 'captures stills by the interval until SIGINT sent' do
-        output = capture_process(time: 6) { client.start(%W(intrec --dir #{image_dir} --interval 2 --transfer)) }
+        output = capture_process(6) { client.start(%W(intrec --dir #{image_dir} --interval 2 --transfer)) }
         matched = output.scan(/Transferred (DSC\d+\.JPG)/).map { |e| e[0] }
         expect(matched.size).to be >= 1
         expect(Dir.entries(image_dir)).to include(*matched)
@@ -302,7 +302,7 @@ describe SonyCameraRemoteAPI::Client::Main do
     end
     context 'without time option' do
       it 'records movie until SIGINT sent' do
-        output = capture_process(time: 6) { client.start(%W(movie --dir #{image_dir} --format MP4 --transfer)) }
+        output = capture_process(6) { client.start(%W(movie --dir #{image_dir} --format MP4 --transfer)) }
         matched = output.scan(/Transferred ((C|MAH|MAF)\d+\.MP4)/).map { |e| e[0] }
         expect(matched.size).to eq 1
         expect(Dir.entries(image_dir)).to include(*matched)
@@ -348,7 +348,7 @@ describe SonyCameraRemoteAPI::Client::Main do
     end
     context 'without time option' do
       it 'records movie until SIGINT sent' do
-        output = capture_process(time: 6) { client.start(%W(looprec --dir #{image_dir} --format MP4 --transfer)) }
+        output = capture_process(6) { client.start(%W(looprec --dir #{image_dir} --format MP4 --transfer)) }
         matched = output.scan(/Transferred ((C|MAH|MAF)\d+\.MP4)/).map { |e| e[0] }
         expect(matched.size).to eq 1
         expect(Dir.entries(image_dir)).to include(*matched)
@@ -395,7 +395,7 @@ describe SonyCameraRemoteAPI::Client::Main do
     # TODO: Cannot capture output of the thread of subprocess???
     context 'with size option', DSC_RX100M4: true do
       it 'starts streaming with specified liveview size' do
-        output = capture_process(time: 5) { client.start(%W(liveview --dir #{image_dir} --size L)) }
+        output = capture_process(5) { client.start(%W(liveview --dir #{image_dir} --size L)) }
         matched = output.scan(/Wrote: (\d+\.jpg)/).map { |e| e[0] }
         expect(matched.size).to be > 1
         expect(Dir.entries(image_dir)).to include(*matched)
