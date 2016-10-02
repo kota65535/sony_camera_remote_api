@@ -21,12 +21,12 @@ This gem is a wrapper library that make it easy to use Sony camera functions for
 
 ## Features
 
+* Easy connection to camera
 * Streaming live-view images by one method
 * Simplified contents transfer
 * Consistent interface for changing parameters safely
 * Auto reconnection
-* Also supports the low-level APIs call
-* Client application bundled
+* CLI application bundled (like [Raspberry Pi camera application](https://www.raspberrypi.org/documentation/raspbian/applications/camera.md))
 
 
 ## Supported version
@@ -52,12 +52,11 @@ Or install it yourself as:
 
 ## Usage
 
-1. Connect your PC (or device) to the camera with Direct Wi-Fi. If you are using Linux, it is recommended to use
-   Shelf class like the following example.
+1. Connect your PC (or device) to the camera with Direct Wi-Fi. If your PC uses **Linux** or **MacOS**, you can easiy do it by using `Shelf` class like following example.
 2. Create SonyCameraRemoteAPI::Camera instance with Shelf instance.
 3. Now you can access all of camera APIs and useful wrapper methods!
 
-This is an example code of capturing single still image.
+This is an example code that takes a picture and transfer it to your PC.
 
 ```ruby
 require 'sony_camera_remote_api'
@@ -73,7 +72,6 @@ shelf.connect
 cam = SonyCameraRemoteAPI::Camera.new shelf
 cam.change_function_to_shoot 'still', 'Single'
 cam.capture_still
-# => Captured jpeg file is transferred to your PC
 ```
 
 For more information, see project's [Wiki](https://github.com/kota65535/sony_camera_remote_api/wiki).
