@@ -131,7 +131,7 @@ end
 
 # Capture the output of forked process executing given block
 # After specified time elapses, the SIGINT is sent to the process to quit.
-def capture_process(time:)
+def capture_process(time)
   # Create child process to send Signal for interrupt.
   read, write = IO.pipe
   pid = fork do
