@@ -12,8 +12,8 @@ module SonyCameraRemoteAPI
     # @param [String] ssid SSID of the camera to connect
     # @param [String] pass Password of the camera to connect
     # @return [Boolean] +true+ if succeeded, +false+ otherwise.
-    def connect(interface, ssid, pass)
-      run_external_command "sudo bash #{connection_script} #{interface} #{ssid} #{pass}"
+    def connect(ssid, pass, interface)
+      run_external_command "sudo bash #{connection_script} #{ssid} #{pass} #{interface}"
     end
 
 
@@ -22,8 +22,8 @@ module SonyCameraRemoteAPI
     # @param [String] ssid SSID of the camera to connect
     # @param [String] pass Password of the camera to connect
     # @return [Boolean] +true+ if succeeded, +false+ otherwise.
-    def restart_and_connect(interface, ssid, pass)
-      run_external_command "sudo bash #{connection_script} -r #{interface} #{ssid} #{pass}"
+    def restart_and_connect(ssid, pass, interface)
+      run_external_command "sudo bash #{connection_script} -r #{ssid} #{pass} #{interface}"
     end
 
 

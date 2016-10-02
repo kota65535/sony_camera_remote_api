@@ -169,7 +169,7 @@ module SonyCameraRemoteAPI
     def connect(ssid = nil)
       entry = get(ssid)
       if entry
-        Scripts.connect entry['interface'], entry['ssid'], entry['pass']
+        Scripts.connect entry['ssid'], entry['pass'], entry['interface']
       else
         false
       end
@@ -183,7 +183,7 @@ module SonyCameraRemoteAPI
     def reconnect(ssid = nil)
       entry = get(ssid)
       if entry
-        Scripts.restart_and_connect entry['interface'], entry['ssid'], entry['pass']
+        Scripts.restart_and_connect entry['ssid'], entry['pass'], entry['interface']
       else
         false
       end

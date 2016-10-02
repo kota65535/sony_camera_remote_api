@@ -187,9 +187,9 @@ module SonyCameraRemoteAPI
 
         # Connect to camera by external script
         if options[:restart]
-          result = Scripts.restart_and_connect(camera['interface'], camera['ssid'], camera['pass'])
+          result = @shelf.reconnect camera['ssid']
         else
-          result = Scripts.connect(camera['interface'], camera['ssid'], camera['pass'])
+          result = @shelf.connect camera['ssid']
         end
         unless result
           puts 'Failed to connect!'
