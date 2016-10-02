@@ -27,7 +27,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec", "~> 3.5"
   spec.add_development_dependency "simplecov"
 
-  spec.add_dependency "activesupport"
+  spec.add_dependency "activesupport", ">= 4.0.0"
   spec.add_dependency "frisky"
   spec.add_dependency "httpclient"
   spec.add_dependency "nokogiri"

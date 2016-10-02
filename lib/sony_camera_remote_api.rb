@@ -498,7 +498,7 @@ module SonyCameraRemoteAPI
 
       x = [[x, 100].min, 0].max
       y = [[y, 100].min, 0].max
-      actTrackingFocus(['xPosition': x, 'yPosition': y]).result
+      actTrackingFocus(['xPosition' => x, 'yPosition' => y]).result
       begin
         wait_event(timeout: TRACKING_FOCUS_TIMEOUT) { |r| r[54]['trackingFocusStatus'] == 'Tracking' }
         log.info "Tracking focus (#{x}, #{y}) OK."
@@ -1090,7 +1090,7 @@ module SonyCameraRemoteAPI
     end
 
 
-    def get_content_list_sub(source, type: nil, target: 'all', view:, sort:, count: nil)
+    def get_content_list_sub(source, type: nil, target: 'all', view: nil, sort: nil, count: nil)
       max_count = getContentCount([{'uri' => source, 'type' => type, 'view' => view}]).result[0]['count']
       count = count ? [max_count, count].min : max_count
       contents = []
