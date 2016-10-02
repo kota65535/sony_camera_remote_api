@@ -442,13 +442,13 @@ module SonyCameraRemoteAPI
       end
 
 
-      desc 'intrec [options]', 'Do interval recording'
+      desc 'intstill [options]', 'Do interval recording'
       option :time, type: :numeric, desc: 'Recording time (sec)', banner: 'NSEC'
       option :interval, type: :string, desc: 'Interval (sec)', banner: 'NSEC'
       still_common_options
       common_options
       option :transfer, type: :boolean, desc: 'Transfer selected contents '
-      def intrec
+      def intstill
         init_camera
         @cam.change_function_to_shoot('intervalstill')
 

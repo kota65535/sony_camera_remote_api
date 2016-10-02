@@ -238,11 +238,11 @@ describe SonyCameraRemoteAPI::Client::Main do
     end
   end
 
-  describe 'intrec command', HDR_AZ1: true, FDR_X1000V: true do
+  describe 'intstill command', HDR_AZ1: true, FDR_X1000V: true do
     context 'with time option' do
       it 'capture stills by the interval until the time elapses' do
         begin
-          output = capture(:stdout, true) { client.start(%W(intrec --dir #{image_dir} --interval 2 --time 10 --transfer)) }
+          output = capture(:stdout, true) { client.start(%W(intstill --dir #{image_dir} --interval 2 --time 10 --transfer)) }
         rescue SystemExit => e
           expect(e.status).to eq 0
         end
@@ -253,7 +253,7 @@ describe SonyCameraRemoteAPI::Client::Main do
     end
     context 'without time option' do
       it 'captures stills by the interval until SIGINT sent' do
-        output = capture_process(6) { client.start(%W(intrec --dir #{image_dir} --interval 2 --transfer)) }
+        output = capture_process(6) { client.start(%W(intstill --dir #{image_dir} --interval 2 --transfer)) }
         matched = output.scan(/Transferred (DSC\d+\.JPG)/).map { |e| e[0] }
         expect(matched.size).to be >= 1
         expect(Dir.entries(image_dir)).to include(*matched)
@@ -262,7 +262,7 @@ describe SonyCameraRemoteAPI::Client::Main do
     context 'without --transfer option' do
       it 'does not transfer recorded stills' do
         begin
-          output = capture(:stdout, true) { client.start(%W(intrec --dir #{image_dir} --interval 5 --time 10)) }
+          output = capture(:stdout, true) { client.start(%W(intstill --dir #{image_dir} --interval 5 --time 10)) }
         rescue SystemExit => e
           expect(e.status).to eq 0
         end
@@ -274,7 +274,7 @@ describe SonyCameraRemoteAPI::Client::Main do
     context 'with --setting option' do
       it 'shows current settings' do
         begin
-          output = capture(:stdout, true) { client.start(%W(intrec --setting --interval 2)) }
+          output = capture(:stdout, true) { client.start(%W(intstill --setting --interval 2)) }
         rescue SystemExit => e
           expect(e.status).to eq 0
         end
