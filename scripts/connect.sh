@@ -2,13 +2,13 @@
 
 function usage() {
   cat <<EOT
-Usage: bash ${0##*/} <interface-name> <network-SSID> <password>
+Usage: bash ${0##*/} <network-SSID> <password> <interface-name>
 EOT
 }
 
 CONNECT_OPTION=''
 
-# オプション解析
+# Options
 while getopts r OPT
 do
     case $OPT in
@@ -20,17 +20,22 @@ do
 done
 shift $((OPTIND - 1))
 
+# Verify the number of arguments
 if [ $# -ne 3 ]; then usage && exit 1; fi
 
 cd $(dirname $0)
-arch=$(uname)
-case "${arch}" in
-    'Linux' | 'Darwin' )
-        bash ./${arch}/connect_wifi.sh ${CONNECT_OPTION} $1 $2 $3 && bash ./${arch}/add_ssdp_route.sh $1
+sysname=$(uname)
+case "${sysname}" in
+    'Linux')
+        bash ./${sysname}/connect_wifi.sh ${CONNECT_OPTION} $1 $2 $3 && bash ./${sysname}/add_ssdp_route.sh $3
+        exit $?
+        ;;
+    'Darwin')
+        bash ./${sysname}/connect_wifi.sh ${CONNECT_OPTION} $1 $2    && bash ./${sysname}/add_ssdp_route.sh
         exit $?
         ;;
     * )
-        echo "The platform '${arch}' is not supported!"
+        echo "The system '${sysname}' is not supported!"
         exit 1
         ;;
 esac

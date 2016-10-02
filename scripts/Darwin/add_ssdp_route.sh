@@ -4,33 +4,55 @@ export LANG="C"
 
 function usage() {
   cat <<EOT
-Usage: bash ${0##*/} <interface-name>
+Description:
+  *** For MacOS ***
+  Add a static route to the SSDP broadcast address via the specified interface.
+  If interface is not given, the internal Wi-Fi device is used.
+Usage:
+  bash ${0##*/} <interface-name>
 EOT
 }
 
-# 引数チェック
-if [ $# -ne 1 ]; then usage && exit 1; fi
+# Verify the number of arguments
+if [ $# -gt 1 ]; then usage && exit 1; fi
 
-# SSDP discoverで使用するブロードキャストアドレス
+if [ -z "${1+x}" ]; then
+    # Get the device name associated with Wi-Fi network service
+    WIFI_DEV_NAME=$(networksetup -listallhardwareports | grep -w Wi-Fi -A1 | awk '/^Device:/{ print $2 }')
+    if [ -z "${WIFI_DEV_NAME}" ]; then
+        echo "Internal Wi-Fi device not found!"
+        exit 2
+    fi
+else
+    # Verify the specified interface exists
+    WIFI_DEV_NAME=$(networksetup -listallhardwareports | awk "/^Device: $1/{ print \$2 }")
+    if [ -z "${WIFI_DEV_NAME}" ]; then
+        echo "Specified interface not found!"
+        exit 2
+    fi
+fi
+
+# The broadcast address for SSDP discover
 SSDP_ADDR=239.255.255.250
 
-# 所定のインターフェース経由の経路があるか調べる
-route get ${SSDP_ADDR} | grep -q "interface: $1"
+
+# Verify the existence of the route
+route -n get ${SSDP_ADDR} | grep -q "interface: ${WIFI_DEV_NAME}"
 if [ $? -eq 0 ]; then
   echo 'Route already configured.'
   exit 0
 fi
 
-# 所定のインターフェース経由の経路を追加する
-route add -host ${SSDP_ADDR} -interface $1
+# Add the route via the internal Wi-Fi device
+route add -host ${SSDP_ADDR} -interface ${WIFI_DEV_NAME}
 if [ $? -ne 0 ]; then
-  echo "Failed to add route to host ${SSDP_ADDR} via $1"
+  echo "Failed to add route to ${SSDP_ADDR} via ${WIFI_DEV_NAME}"
   exit 1
 fi
 
-# 最後に再度確認
-route get ${SSDP_ADDR} | grep -q "interface: $1"
-if [ $? -eq 0 ]; then
+# Confirm the addition of the route completes
+route -n get ${SSDP_ADDR} | grep -q "interface: ${WIFI_DEV_NAME}"
+if [ $? -ne 0 ]; then
   echo "Something goes wrong!"
   exit 2
 fi
