@@ -30,10 +30,9 @@ module SonyCameraRemoteAPI
 
 
     # @param [Hash] endpoints Endpoint URIs
-    def initialize(endpoints)
+    def initialize(endpoints, httpclient)
       @endpoints = endpoints
-      @cli = HTTPClient.new
-      @cli.connect_timeout  = @cli.send_timeout = @cli.receive_timeout = 30
+      @http = httpclient
 
       unless call_api('camera', 'getApplicationInfo', [], 1, '1.0').result[1] >= '2.0.0'
         raise ServerNotCompatible, 'API version of the server < 2.0.0.'
@@ -83,7 +82,7 @@ module SonyCameraRemoteAPI
       }
       # log.debug request
       begin
-        raw_response = @cli.post_content(@endpoints[service_type], request.to_json)
+        raw_response = @http.post_content(@endpoints[service_type], request.to_json)
       rescue HTTPClient::BadResponseError => e
         if e.res.status_code == 403
           raise APIForbidden.new, "Method '#{method}' returned 403 Forbidden error. Maybe this method is not allowed to general users."
@@ -116,7 +115,7 @@ module SonyCameraRemoteAPI
         'id' => id,
         'version' => version
       }
-      conn = @cli.post_async(@endpoints[service_type], request.to_json)
+      conn = @http.post_async(@endpoints[service_type], request.to_json)
       start_time = Time.now if timeout
       loop do
         break if conn.finished?
@@ -184,13 +183,5 @@ module SonyCameraRemoteAPI
     def support?(method)
       @apis.key? method
     end
-
-
-    # Reset HTTPClient.
-    # @return [void]
-    def reset_connection
-      @cli.reset_all
-    end
-
   end
 end

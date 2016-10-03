@@ -1,5 +1,6 @@
 require 'sony_camera_remote_api/raw_api'
 require 'sony_camera_remote_api/camera_api_group'
+require 'sony_camera_remote_api/retrying'
 require 'forwardable'
 
 module SonyCameraRemoteAPI
@@ -26,9 +27,18 @@ module SonyCameraRemoteAPI
     # @param [Hash] endpoints
     # @param [Proc] reconnect_by
     def initialize(endpoints, reconnect_by: nil)
-      @raw_api_manager = RawAPIManager.new endpoints
+      @http = HTTPClient.new
+      @http.connect_timeout  = @http.send_timeout = @http.receive_timeout = 30
+
+      Retrying.new(reconnect_by, @http).reconnect_and_retry do
+        @raw_api_manager = RawAPIManager.new endpoints, @http
+      end
+
       @api_group_manager = CameraAPIGroupManager.new self
-      @reconnect_by = reconnect_by
+
+      @retrying = Retrying.new(reconnect_by, @http).add_common_hook do
+        startRecMode! timeout: 0
+      end
     end
 
 
@@ -40,7 +50,7 @@ module SonyCameraRemoteAPI
       params = [params] unless params.is_a? Array
       name, service, id, version = @raw_api_manager.search_method(__method__, **opts)
       response = nil
-      reconnect_and_retry do
+      @retrying.reconnect_and_retry do
         if params[0]
           response = @raw_api_manager.call_api_async(service, name, params, id, version, opts[:timeout])
         else
@@ -55,7 +65,8 @@ module SonyCameraRemoteAPI
     # @return [Hash]  Response of API
     def getAvailableApiList(params = [], **opts)
       name, service, id, version = @raw_api_manager.search_method(__method__, **opts)
-      reconnect_and_retry do
+      log.debug "calling: #{name}"
+      @retrying.reconnect_and_retry do
         @raw_api_manager.call_api(service, name, params, id, version)
       end
     end
@@ -130,9 +141,10 @@ module SonyCameraRemoteAPI
       method = method.to_s.delete('!').to_sym
       params = [params] unless params.is_a? Array
       response = nil
-      reconnect_and_retry do
+      @retrying.reconnect_and_retry do
         begin
           name, service, id, version = @raw_api_manager.search_method(method, **opts)
+          log.debug "calling: #{name}"
           if service == 'camera' || name == ''
             if opts[:timeout]
               response = call_api_safe(service, name, params, id, version, opts[:timeout], **opts)
@@ -202,37 +214,5 @@ module SonyCameraRemoteAPI
       getEvent(false)
     end
 
-
-    # Execute given block. And if the block raises Error caused by Wi-Fi disconnection,
-    # Reconnect by @reconnect_by Proc and retry the given block.
-    # @param [Boolean] retrying If true, retry given block. If false, return immediately after reconnection.
-    # @param [Fixnum] num       Number of retry.
-    # @param [Proc] hook        Hook method called after reconnection.
-    def reconnect_and_retry(retrying: true, num: 1, hook: nil)
-      yield
-    rescue HTTPClient::TimeoutError, Errno::EHOSTUNREACH, Errno::ECONNREFUSED => e
-      retry_count ||= 0
-      retry_count += 1
-      raise e if @reconnect_by.nil? || retry_count > num
-      log.error "#{e.class}: #{e.message}"
-      log.error 'The camera seems to be disconnected! Reconnecting...'
-      unless @reconnect_by.call
-        log.error 'Failed to reconnect.'
-        raise e
-      end
-      log.error 'Reconnected.'
-      @raw_api_manager.reset_connection
-      # For cameras that use Smart Remote Control app.
-      startRecMode! timeout: 0
-      return unless retrying
-
-      if hook
-        unless hook.call
-          log.error 'Before-retry hook failed.'
-          raise e
-        end
-      end
-      retry
-    end
   end
 end
