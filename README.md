@@ -78,7 +78,13 @@ cam.change_function_to_shoot 'still', 'Single'
 cam.capture_still
 ```
 
-For more information, see project's [Wiki](https://github.com/kota65535/sony_camera_remote_api/wiki).
+### Tutorials
+
+Tutorials are available from Project's [Wiki](https://github.com/kota65535/sony_camera_remote_api/wiki).
+
+### API Documentation
+
+API documents of this library are available [here](http://www.rubydoc.info/github/kota65535/sony_camera_remote_api).
 
 
 ## TODO
