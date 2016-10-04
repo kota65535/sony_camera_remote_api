@@ -1,5 +1,7 @@
 # Sony Camera Remote API Wrapper
 
+[![Gem Version](https://badge.fury.io/rb/sony_camera_remote_api.svg)](https://badge.fury.io/rb/sony_camera_remote_api)
+
 A Ruby Gem that facilitates the use of Sony Camera Remote API.
 
 - [Backgrounds](#backgrounds)
