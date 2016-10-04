@@ -5,6 +5,7 @@ require 'sony_camera_remote_api/utils'
 require 'sony_camera_remote_api/camera_api'
 require 'sony_camera_remote_api/packet'
 require 'sony_camera_remote_api/shelf'
+require 'sony_camera_remote_api/retrying'
 require 'core_ext/hash_patch'
 require 'httpclient'
 require 'active_support'
@@ -30,7 +31,7 @@ module SonyCameraRemoteAPI
 
     attr_reader :endpoints
 
-    # Timeout for saving images captured by continous shooting.
+    # Timeout for saving images captured by continuous shooting.
     CONT_SHOOT_SAVING_TIME = 25
     # Timeout for focusing by tracking focus.
     TRACKING_FOCUS_TIMEOUT = 4
@@ -57,8 +58,11 @@ module SonyCameraRemoteAPI
       @reconnect_by = reconnect_by if reconnect_by
 
       @api_manager = CameraAPIManager.new @endpoints, reconnect_by: @reconnect_by
-      @cli = HTTPClient.new
-      @cli.connect_timeout  = @cli.send_timeout = @cli.receive_timeout = 30
+      @http = HTTPClient.new
+      @http.connect_timeout  = @http.send_timeout = @http.receive_timeout = 10
+      @retrying = Retrying.new(@reconnect_by, @http).add_common_hook do
+        startRecMode! timeout: 0
+      end
 
       # Some cameras which use "Smart Remote Control" app must call this method before remote shooting.
       startRecMode! timeout: 0
@@ -597,9 +601,9 @@ module SonyCameraRemoteAPI
           # Break from loop inside when timeout
           catch :finished do
             # For reconnection
-            reconnect_and_retry_forever do
+            @retrying.reconnect_and_retry_forever do
               # Retrieve streaming data
-              @cli.get_content(liveview_url) do |chunk|
+              @http.get_content(liveview_url) do |chunk|
                 loop_start = Time.now
                 received_sec = loop_start - loop_end
 
@@ -658,6 +662,8 @@ module SonyCameraRemoteAPI
               end
             end
           end
+        rescue StandardError => e
+            log.error e.backtrace.join "\n"
         ensure
           # Comes here when liveview finished or killed by signal
           puts 'Stopping Liveview...'
@@ -890,9 +896,9 @@ module SonyCameraRemoteAPI
       FileUtils.mkdir_p dir if dir
       result = true
       time = Benchmark.realtime do
-        result = reconnect_and_give_up do
+        result = @retrying.reconnect_and_give_up do
           open(filepath, 'wb') do |file|
-            @cli.get_content(url) do |chunk|
+            @http.get_content(url) do |chunk|
               file.write chunk
             end
           end
@@ -1114,9 +1120,9 @@ module SonyCameraRemoteAPI
         log.debug url
         log.info "Transferring #{filepath}..."
         time = Benchmark.realtime do
-          reconnect_and_retry(hook: method(:change_function_to_transfer)) do
+          @retrying.reconnect_and_retry(hook: method(:change_function_to_transfer)) do
             open(filepath, 'wb') do |file|
-              @cli.get_content(url) do |chunk|
+              @http.get_content(url) do |chunk|
                 file.write chunk
               end
             end
@@ -1170,44 +1176,5 @@ module SonyCameraRemoteAPI
       urls_filenames
     end
 
-
-    # Try to run given block.
-    # If an error raised because of the Wi-Fi disconnection, try to reconnect and run the block again.
-    # If error still continues, give it up and raise the error.
-    def reconnect_and_retry(retrying: true, num: 1, hook: nil)
-      yield
-    rescue HTTPClient::BadResponseError, HTTPClient::TimeoutError, Errno::EHOSTUNREACH, Errno::ECONNREFUSED => e
-      retry_count ||= 0
-      retry_count += 1
-      raise e if @reconnect_by.nil? || retry_count > num
-      log.error "#{e.class}: #{e.message}"
-      log.error 'The camera seems to be disconnected! Reconnecting...'
-      unless @reconnect_by.call
-        log.error 'Failed to reconnect.'
-        raise e
-      end
-      log.error 'Reconnected.'
-      @cli.reset_all
-      # For cameras that use Smart Remote Control app.
-      startRecMode! timeout: 0
-
-      if hook
-        unless hook.call
-          log.error 'Before-retry hook failed.'
-          raise e
-        end
-      end
-      retry if retrying
-    end
-
-    def reconnect_and_retry_forever(&block)
-      reconnect_and_retry &block
-    rescue HTTPClient::BadResponseError, HTTPClient::TimeoutError, Errno::EHOSTUNREACH, Errno::ECONNREFUSED => e
-      retry
-    end
-
-    def reconnect_and_give_up(&block)
-      reconnect_and_retry(retrying: false, &block)
-    end
   end
 end

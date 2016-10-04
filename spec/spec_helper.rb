@@ -42,14 +42,16 @@ def delete_tags
   if rules.find { |k,v| k == :last_run_status }
     rules.delete_if { |k,v| k != :last_run_status }
   end
+  if rules.find { |k,v| k == :focus }
+    rules.delete_if { |k,v| k != :focus }
+  end
 end
 
 
 
 RSpec.configure do |c|
   # c.fail_fast = true
-  c.filter_run :focus
-  c.run_all_when_everything_filtered = true
+  # c.filter_run focus: true
   c.example_status_persistence_file_path = "example_status.txt"
 
   # Variables in before(:suite) is not in the scope of examples.
@@ -74,8 +76,7 @@ RSpec.configure do |c|
       # Wait user input to switch models
       puts "Specified model name: '#{model_name}'"
       puts 'Press any key to continue...'
-      sound_ready
-      STDIN.getch.chr
+      ready_and_getch
 
       # Select camera and connect using sonycam utility
       shelf = SonyCameraRemoteAPI::Shelf.new File.expand_path('~/.sonycam.shelf')
@@ -86,9 +87,9 @@ RSpec.configure do |c|
       end
 
       # Camera object for lib test
-      cam = SonyCameraRemoteAPI::Camera.new shelf
+      cam = SonyCameraRemoteAPI::Camera.new shelf, log_level: Logger::DEBUG
       # Camera object for reconnection test
-      cam_rcn = SonyCameraRemoteAPI::Camera.new shelf, reconnect_by: shelf.method(:connect)
+      cam_rcn = SonyCameraRemoteAPI::Camera.new shelf, reconnect_by: shelf.method(:connect), log_level: Logger::DEBUG
       # Client class for client test
       client = SonyCameraRemoteAPI::Client::Main
     end
@@ -243,6 +244,11 @@ end
 
 def sound_ready
   system('paplay /usr/share/sounds/ubuntu/stereo/system-ready.ogg --volume 100000')
+end
+
+def ready_and_getch
+  sound_ready
+  puts STDIN.getch.chr
 end
 
 def bell_and_getch
