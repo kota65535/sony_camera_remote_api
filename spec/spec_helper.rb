@@ -51,8 +51,7 @@ end
 
 RSpec.configure do |c|
   # c.fail_fast = true
-  c.filter_run focus: true
-  c.run_all_when_everything_filtered = true
+  # c.filter_run focus: true
   c.example_status_persistence_file_path = "example_status.txt"
 
   # Variables in before(:suite) is not in the scope of examples.
@@ -249,12 +248,12 @@ end
 
 def ready_and_getch
   sound_ready
-  # puts STDIN.getch.chr
+  puts STDIN.getch.chr
 end
 
 def bell_and_getch
   bell
-  # puts STDIN.getch.chr
+  puts STDIN.getch.chr
 end
 
 

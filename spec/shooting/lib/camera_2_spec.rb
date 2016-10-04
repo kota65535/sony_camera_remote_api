@@ -1,12 +1,6 @@
 require 'spec_helper'
 
 
-describe SonyCameraRemoteAPI do
-  it 'has a version number' do
-    expect(SonyCameraRemoteApi::VERSION).not_to be nil
-  end
-end
-
 module SonyCameraRemoteAPI
   describe SonyCameraRemoteAPI::Camera do
     let(:cam) { @cam }
