@@ -9,13 +9,13 @@ module SonyCameraRemoteAPI
     include Utils
 
     # Default config file saved in home directory.
-    GLOBAL_CONFIG_FILE = File.expand_path('~/.sonycam.shelf')
+    GLOBAL_CONFIG_FILE = File.expand_path '~/.sonycam.shelf'
 
 
     # Create CameraShelf object.
     # @param [String] config_file The path of config file.
     def initialize(config_file = GLOBAL_CONFIG_FILE)
-      @config_file = config_file
+      @config_file = File.expand_path config_file
       read_or_create
     end
 
